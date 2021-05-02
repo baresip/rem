@@ -4,6 +4,10 @@
 # Copyright (C) 2010 Creytiv.com
 #
 
+# Variables:
+#
+# AURING_REPLACES_AUBUF		Use auringbuf instead of aubuf
+
 # Main version number
 VER_MAJOR := 1
 VER_MINOR := 0
@@ -39,8 +43,15 @@ include $(LIBRE_MK)
 # List of modules
 MODULES += fir goertzel
 MODULES += g711
-MODULES += aubuf aufile auresamp autone dtmf
-MODULES += au auconv aulevel auringbuf
+MODULES += aufile auresamp autone dtmf
+MODULES += au auconv aulevel
+
+ifeq ($(AURING_REPLACES_AUBUF),)
+MODULES += aubuf auringbuf
+else
+MODULES += auringbuf
+CFLAGS  += -DAURING_REPLACES_AUBUF
+endif
 
 ifneq ($(HAVE_LIBPTHREAD),)
 MODULES += aumix vidmix

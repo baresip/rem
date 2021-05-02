@@ -52,8 +52,11 @@ int auringbuf_alloc(struct auringbuf **abp, size_t min_sz, size_t max_sz)
 	struct auringbuf *ab;
 	int err;
 
-	if (!abp || !min_sz || !max_sz)
+	if (!abp || !min_sz)
 		return EINVAL;
+
+	if (!max_sz)
+		max_sz = min_sz;
 
 	ab = mem_zalloc(sizeof(*ab), auringbuf_destructor);
 	if (!ab)
@@ -67,7 +70,10 @@ int auringbuf_alloc(struct auringbuf **abp, size_t min_sz, size_t max_sz)
 	ab->max_sz = max_sz;
 	ab->pos_write = 0;
 	ab->pos_read = 0;
+
 	ab->mb = mbuf_alloc(max_sz);
+	if (!ab->mb)
+		err = ENOMEM;
 
  out:
 	if (err)

@@ -6,7 +6,9 @@
 
 
 #include "rem_au.h"
+#ifndef AURING_REPLACES_AUBUF
 #include "rem_aubuf.h"
+#endif
 #include "rem_auringbuf.h"
 #include "rem_auconv.h"
 #include "rem_aufile.h"
