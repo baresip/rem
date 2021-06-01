@@ -32,6 +32,7 @@ const char *aufmt_name(enum aufmt fmt)
 	case AUFMT_PCMU:    return "PCMU";
 	case AUFMT_FLOAT:   return "FLOAT";
 	case AUFMT_S24_3LE: return "S24_3LE";
+	case AUFMT_RAW:     return "RAW";
 	default:            return "???";
 	}
 }
