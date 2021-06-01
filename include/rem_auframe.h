@@ -14,7 +14,7 @@ struct auframe {
 	uint8_t ch;          /**< Channels                          */
 };
 
-void auframe_init(struct auframe *af, enum aufmt fmt, void *sampv, size_t sampc,
-		  uint32_t srate, uint8_t ch);
+void auframe_init(struct auframe *af, enum aufmt fmt, void *sampv,
+		  size_t sampc, uint32_t srate, uint8_t ch);
 size_t auframe_size(const struct auframe *af);
 void   auframe_mute(struct auframe *af);
