@@ -19,7 +19,7 @@
  * @param srate    Samplerate
  * @param ch       Channels
  */
-void auframe_init(struct auframe *af, int fmt, void *sampv, size_t sampc,
+void auframe_init(struct auframe *af, enum aufmt fmt, void *sampv, size_t sampc,
 		  uint32_t srate, uint8_t ch)
 {
 	if (!af)
