@@ -10,7 +10,7 @@
 #include <rem_aubuf.h>
 
 
-#define AUBUF_DEBUG 0
+#define AUBUF_DEBUG 1
 #define AUDIO_TIMEBASE 1000000U
 
 
@@ -110,7 +110,7 @@ int aubuf_append_auframe(struct aubuf *ab, struct mbuf *mb, struct auframe *af)
 {
 	struct frame *f;
 
-	if (!ab || !mb || !af)
+	if (!ab || !mb)
 		return EINVAL;
 
 	f = mem_zalloc(sizeof(*f), frame_destructor);
@@ -118,7 +118,8 @@ int aubuf_append_auframe(struct aubuf *ab, struct mbuf *mb, struct auframe *af)
 		return ENOMEM;
 
 	f->mb = mem_ref(mb);
-	f->af = *af;
+	if (af)
+		f->af = *af;
 
 	lock_write_get(ab->lock);
 
@@ -236,8 +237,6 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 		size_t n;
 
 		le = le->next;
-		if (af->fmt != f->af.fmt)
-			continue;
 
 		n = min(mbuf_get_left(f->mb), sz);
 
