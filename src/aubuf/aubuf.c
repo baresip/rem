@@ -10,7 +10,7 @@
 #include <rem_aubuf.h>
 
 
-#define AUBUF_DEBUG 1
+#define AUBUF_DEBUG 0
 #define AUDIO_TIMEBASE 1000000U
 
 
