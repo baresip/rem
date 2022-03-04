@@ -9,6 +9,7 @@
 #include <rem_aulevel.h>
 #include <rem_auframe.h>
 #include <rem_aubuf.h>
+#include "ajb.h"
 
 
 #define AUBUF_DEBUG 0
@@ -31,6 +32,7 @@ struct aubuf {
 		size_t ur;
 	} stats;
 #endif
+	struct ajb *ajb;         /**< Adaptive jitter buffer statistics       */
 };
 
 
@@ -56,6 +58,45 @@ static void aubuf_destructor(void *arg)
 
 	list_flush(&ab->afl);
 	mem_deref(ab->lock);
+	mem_deref(ab->ajb);
+}
+
+
+static void read_auframe(struct aubuf *ab, struct auframe *af)
+{
+	struct le *le = ab->afl.head;
+	size_t sample_size = aufmt_sample_size(af->fmt);
+	size_t sz = auframe_size(af);
+	uint8_t *p = af->sampv;
+	
+	while (le) {
+		struct frame *f = le->data;
+		size_t n;
+
+		le = le->next;
+
+		n = min(mbuf_get_left(f->mb), sz);
+
+		(void)mbuf_read_mem(f->mb, p, n);
+		ab->cur_sz -= n;
+
+		af->srate     = f->af.srate;
+		af->ch	      = f->af.ch;
+		af->timestamp = f->af.timestamp;
+
+		if (af->srate && af->ch && sample_size)
+			f->af.timestamp += n * AUDIO_TIMEBASE /
+					   (af->srate * af->ch * sample_size);
+
+		if (!mbuf_get_left(f->mb))
+			mem_deref(f);
+
+		if (n == sz)
+			break;
+
+		p  += n;
+		sz -= n;
+	}
 }
 
 
@@ -175,6 +216,9 @@ int aubuf_append_auframe(struct aubuf *ab, struct mbuf *mb, struct auframe *af)
 		}
 	}
 
+	if (ab->filling && ab->cur_sz >= ab->wish_sz)
+		ab->filling = false;
+
 	lock_rel(ab->lock);
 
 	return 0;
@@ -218,6 +262,9 @@ int aubuf_write_auframe(struct aubuf *ab, struct auframe *af)
 	mem_deref(mb);
 	lock_rel(ab->lock);
 
+	if (!ab->filling)
+		ajb_calc(ab->ajb, af, ab->cur_sz);
+
 	return err;
 }
 
@@ -231,25 +278,25 @@ int aubuf_write_auframe(struct aubuf *ab, struct auframe *af)
  */
 void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 {
-	struct le *le;
 	size_t sz;
-	size_t sample_size;
-	uint8_t *p;
 	bool filling;
+	enum ajb_state as;
 
 	if (!ab || !af)
 		return;
 
-	sample_size = aufmt_sample_size(af->fmt);
-	if (sample_size)
-		sz = af->sampc * sample_size;
-	else
-		sz = af->sampc;
-
-	p = af->sampv;
+	if (!ab->ajb)
+		ab->ajb = ajb_alloc();
 
 	lock_write_get(ab->lock);
+	as = ajb_get(ab->ajb, af);
+	if (as == AJB_LOW) {
+		re_printf("aubuf: inc buffer due to high jitter\n");
+		ajb_debug(ab->ajb);
+		goto out;
+	}
 
+	sz = auframe_size(af);
 	if (ab->cur_sz < (ab->filling ? ab->wish_sz : sz)) {
 #if AUBUF_DEBUG
 		if (!ab->filling) {
@@ -260,43 +307,16 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 #endif
 		filling = ab->filling;
 		ab->filling = true;
-		memset(p, 0, sz);
+		memset(af->sampv, 0, sz);
 		if (filling)
 			goto out;
 	}
-	else {
-		ab->filling = false;
-	}
 
-	le = ab->afl.head;
-
-	while (le) {
-		struct frame *f = le->data;
-		size_t n;
-
-		le = le->next;
-
-		n = min(mbuf_get_left(f->mb), sz);
-
-		(void)mbuf_read_mem(f->mb, p, n);
-		ab->cur_sz -= n;
-
-		af->srate     = f->af.srate;
-		af->ch	      = f->af.ch;
-		af->timestamp = f->af.timestamp;
-
-		if (af->srate && af->ch && sample_size)
-			f->af.timestamp += n * AUDIO_TIMEBASE /
-					   (af->srate * af->ch * sample_size);
-
-		if (!mbuf_get_left(f->mb))
-			mem_deref(f);
-
-		if (n == sz)
-			break;
-
-		p  += n;
-		sz -= n;
+	read_auframe(ab, af);
+	if (as == AJB_HIGH && auframe_silence(af)) {
+		re_printf("aubuf: drop a frame to reduce latency\n");
+		ajb_debug(ab->ajb);
+		read_auframe(ab, af);
 	}
 
  out:
@@ -367,6 +387,7 @@ void aubuf_flush(struct aubuf *ab)
 	ab->ts      = 0;
 
 	lock_rel(ab->lock);
+	ajb_reset(ab->ajb);
 }
 
 

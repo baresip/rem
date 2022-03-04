@@ -42,3 +42,4 @@ static inline void auframe_update(struct auframe *af, void *sampv,
 size_t auframe_size(const struct auframe *af);
 void   auframe_mute(struct auframe *af);
 double auframe_level(struct auframe *af);
+bool   auframe_silence(struct auframe *af);
