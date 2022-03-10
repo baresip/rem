@@ -32,6 +32,7 @@ struct aubuf {
 		size_t ur;
 	} stats;
 #endif
+	enum aubuf_mode mode;
 	struct ajb *ajb;         /**< Adaptive jitter buffer statistics       */
 };
 
@@ -136,6 +137,15 @@ int aubuf_alloc(struct aubuf **abp, size_t min_sz, size_t max_sz)
 		*abp = ab;
 
 	return err;
+}
+
+
+void aubuf_set_mode(struct aubuf *ab, enum aubuf_mode mode)
+{
+	if (!ab)
+		return;
+
+	ab->mode = mode;
 }
 
 
@@ -262,7 +272,7 @@ int aubuf_write_auframe(struct aubuf *ab, struct auframe *af)
 	mem_deref(mb);
 	lock_rel(ab->lock);
 
-	if (!ab->filling)
+	if (!ab->filling && ab->ajb)
 		ajb_calc(ab->ajb, af, ab->cur_sz);
 
 	return err;
@@ -285,7 +295,7 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 	if (!ab || !af)
 		return;
 
-	if (!ab->ajb)
+	if (!ab->ajb && ab->mode == AUBUF_ADAPTIVE)
 		ab->ajb = ajb_alloc();
 
 	lock_write_get(ab->lock);
