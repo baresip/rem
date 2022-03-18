@@ -24,7 +24,7 @@ enum {
 	JITTER_UP_SPEED    = 64,   /* 64 times faster up than down       */
 	BUFTIME_EMA_COEFF  = 128,  /* Divisor for Buftime EMA coeff.     */
 	BUFTIME_LO         = 125,  /* 125% of jitter                     */
-	BUFTIME_HI         = 200,  /* 200% of jitter                     */
+	BUFTIME_HI         = 175,  /* 175% of jitter                     */
 };
 
 
@@ -42,6 +42,7 @@ struct ajb {
 		uint32_t buftime;
 		uint32_t bufmin;
 		uint32_t bufmax;
+		enum ajb_state as;
 	} plot;
 #endif
 
@@ -50,6 +51,8 @@ struct ajb {
 	uint32_t ptime;      /**< Packet time [us]                */
 	int32_t avbuftime;   /**< average buffered time [us]      */
 	bool started;        /**< Started flag                    */
+	uint32_t bufmin;     /**< Minimum buffer time [us]        */
+	struct auframe af;   /**< Audio frame of last ajb_get()   */
 };
 
 
@@ -73,16 +76,37 @@ static void plot_ajb(struct ajb *ajb, uint64_t tr)
 	re_printf("%s, 0x%p, %u, %i, %u, %u, %u, %i, %i, %u\n",
 			__func__,               /* row 1  - grep */
 			ajb,                    /* row 2  - grep optional */
-			treal,                  /* row 3  - plot optional */
+			treal,                  /* row 3  - plot x-axis */
 			ajb->plot.d,            /* row 4  - plot */
 			ajb->jitter,            /* row 5  - plot */
 			ajb->plot.buftime,      /* row 6  - plot */
 			ajb->avbuftime,         /* row 7  - plot */
 			ajb->plot.bufmin,       /* row 8  - plot */
 			ajb->plot.bufmax,       /* row 9  - plot */
-			ajb->as);               /* row 10 - plot */
+			ajb->plot.as);          /* row 10 - plot */
 }
 #endif
+
+
+void plot_underrun(struct ajb *ajb)
+{
+	uint64_t tr;
+	uint32_t treal;
+	if (!ajb)
+		return;
+
+	tr = tmr_jiffies();
+	if (!ajb->tr00)
+		ajb->tr00 = tr;
+
+	treal = (uint32_t) (tr - ajb->tr00);
+	re_printf("%s, 0x%p, %u, %i\n",
+			__func__,               /* row 1  - grep */
+			ajb,                    /* row 2  - grep optional */
+			treal,                  /* row 3  - plot optional */
+			1);                     /* row 4  - plot */
+}
+
 
 /**
  * Initializes the adaptive jitter buffer statistics
@@ -165,7 +189,7 @@ void ajb_calc(struct ajb *ajb, struct auframe *af, size_t cur_sz)
 
 	da = abs(d);
 
-	buftime = cur_sz / sz * 1000 * 1000 / af->srate;
+	buftime = cur_sz * 1000 / (af->srate * af->ch *  sz / 1000);
 	if (ajb->started) {
 		ajb->avbuftime += ((int32_t) buftime - ajb->avbuftime) /
 				  BUFTIME_EMA_COEFF;
@@ -194,7 +218,8 @@ void ajb_calc(struct ajb *ajb, struct auframe *af, size_t cur_sz)
 	bufmax = (uint32_t) ajb->jitter * BUFTIME_HI / 100;
 
 	bufmin = MAX(bufmin, ajb->ptime * 2 / 3);
-	bufmax = MAX(bufmax, bufmin + 4 * ajb->ptime / 3);
+	bufmax = MAX(bufmax, bufmin + 7 * ajb->ptime / 6);
+	ajb->bufmin = bufmin;
 
 	if ((uint32_t) ajb->avbuftime < bufmin)
 		ajb->as = AJB_LOW;
@@ -219,28 +244,42 @@ out:
 
 enum ajb_state ajb_get(struct ajb *ajb, struct auframe *af)
 {
-	enum ajb_state as;
+	enum ajb_state as = AJB_GOOD;
 
 	if (!ajb || !af || !af->srate || !af->sampc)
 		return AJB_GOOD;
 
 	lock_write_get(ajb->lock);
+	ajb->af = *af;
 
 	/* ptime in [us] */
 	ajb->ptime = af->sampc * 1000 * 1000 / af->srate;
-	as = ajb->as;
 	if (!ajb->avbuftime)
 		goto out;
 
+	if (ajb->as == AJB_GOOD || !auframe_silence(af))
+		goto out;
+
+	as = ajb->as;
 	if (as == AJB_HIGH) {
 		/* early adjustment of avbuftime */
 		ajb->avbuftime -= ajb->ptime;
 		ajb->as = AJB_GOOD;
+#if DEBUG_LEVEL >= 6
+		ajb->plot.as = AJB_HIGH;
+		plot_ajb(ajb, tmr_jiffies());
+		ajb->plot.as = AJB_GOOD;
+#endif
 	}
 	else if (as == AJB_LOW) {
 		/* early adjustment */
 		ajb->avbuftime += ajb->ptime;
 		ajb->as = AJB_GOOD;
+#if DEBUG_LEVEL >= 6
+		ajb->plot.as = AJB_LOW;
+		plot_ajb(ajb, tmr_jiffies());
+		ajb->plot.as = AJB_GOOD;
+#endif
 	}
 
 out:
@@ -256,8 +295,15 @@ int32_t ajb_debug(const struct ajb *ajb)
 	lock_write_get(ajb->lock);
 	jitter = ajb ? ajb->jitter : 0;
 	lock_rel(ajb->lock);
-	re_printf("jitter: %d, avbuftime: %d\n",
+	re_printf("  ajb jitter: %d, ajb avbuftime: %d\n",
 		  ajb->jitter / 1000, ajb->avbuftime);
 
 	return jitter;
+}
+
+
+uint32_t ajb_bufmin(struct ajb *ajb)
+{
+	size_t sz = aufmt_sample_size(ajb->af.fmt);
+	return ajb->bufmin / 1000 * ajb->af.sampc * sz / 1000;
 }
