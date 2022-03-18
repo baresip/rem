@@ -12,7 +12,7 @@
 #include "ajb.h"
 
 
-#define AUBUF_DEBUG 0
+#define AUBUF_DEBUG 1
 #define AUDIO_TIMEBASE 1000000U
 
 
@@ -33,7 +33,7 @@ struct aubuf {
 	} stats;
 #endif
 	enum aubuf_mode mode;
-	struct ajb *ajb;         /**< Adaptive jitter buffer statistics       */
+	struct ajb *ajb;         /**< Adaptive jitter buffer statistics      */
 };
 
 
@@ -69,7 +69,7 @@ static void read_auframe(struct aubuf *ab, struct auframe *af)
 	size_t sample_size = aufmt_sample_size(af->fmt);
 	size_t sz = auframe_size(af);
 	uint8_t *p = af->sampv;
-	
+
 	while (le) {
 		struct frame *f = le->data;
 		size_t n;
@@ -313,6 +313,7 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 			++ab->stats.ur;
 			(void)re_printf("aubuf: %p underrun (cur=%zu)\n",
 					ab, ab->cur_sz);
+			plot_underrun(ab->ajb);
 		}
 #endif
 		filling = ab->filling;
@@ -323,7 +324,7 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 	}
 
 	read_auframe(ab, af);
-	if (as == AJB_HIGH && auframe_silence(af)) {
+	if (as == AJB_HIGH) {
 		re_printf("aubuf: drop a frame to reduce latency\n");
 		ajb_debug(ab->ajb);
 		read_auframe(ab, af);

@@ -66,14 +66,23 @@ set datafile separator ","
 set key outside
 set xlabel "time/[ms]"
 set ylabel "[ms]"
-plot \
-'ajb.dat' using 3:($5/1000) title 'jitter' with linespoints linecolor "orange", \
-'ajb.dat' using 3:($7/1000) title 'avbuftime' with linespoints linecolor "skyblue", \
-'ajb.dat' using 3:($8/1000) title 'bufmin' with linespoints linecolor "sea-green", \
-'ajb.dat' using 3:($9/1000) title 'bufmax' with linespoints linecolor "sea-green", \
-'ajb.dat' using 3:($10*10) title 'Good/Empty/Low/High' linecolor "red", \
-'ajb.dat' using 3:($6/1000) title 'buftime' linecolor "light-grey", \
-10 title "Empty=10" linecolor "red", \
-20 title "Low=20" linecolor "red", \
-30 title "High=30" linecolor "red"
 
+stats "ajb.dat" using ($6/1000) name "B"
+stats "ajb.dat" using 3 name "X"
+
+bufst(y) = y>0 ? B_max*0.8 + y*B_max*0.09 : NaN
+text1(y) = y==1 ? "LOW" : y==2 ? "HIGH" : ""
+text2(y) = y==1 ? "UNDERRUN" : ""
+underr(y) =  B_max*0.7 + y*B_max*0.09
+
+plot \
+'ajb.dat' using 3:($5/1000) title 'jitter' with linespoints lc "orange", \
+'ajb.dat' using 3:($7/1000) title 'avbuftime' with linespoints lc "skyblue", \
+'ajb.dat' using 3:($8/1000) title 'bufmin' with linespoints lc "sea-green", \
+'ajb.dat' using 3:($9/1000) title 'bufmax' with linespoints lc "sea-green", \
+'ajb.dat' using 3:($6/1000) title 'buftime' lc "light-grey", \
+'ajb.dat' using 3:(bufst($10)) title 'Low/High' lc "red", \
+"<echo 1 1 1" using (X_max):(bufst(2)):(text1(2)) notitle w labels tc  "red", \
+"<echo 1 1 1" using (X_max):(bufst(1)):(text1(1)) notitle w labels tc  "red", \
+'underrun.dat' using 3:(underr($4)) title 'underrun' pt 7 ps 1.5 lc "red", \
+"<echo 1 1 1" using (X_max):(underr(1)):(text2(1)) notitle w labels tc "red"
