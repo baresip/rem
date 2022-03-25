@@ -184,7 +184,7 @@ $(BUILD): Makefile $(MK) $(MODMKS)
 .PHONY: clean
 clean:
 	@rm -rf $(SHARED) $(STATIC) librem.pc test.d test.o test $(BUILD) \
-		.cache/rem
+		.cache/rem build
 
 
 install: $(SHARED) $(STATIC) librem.pc
