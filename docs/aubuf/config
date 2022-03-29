@@ -5,8 +5,8 @@ audio_alert		pulse,
 audio_level		no
 audio_buffer   20-160
 
-jitter_buffer_type	fixed		# off, fixed, adaptive
-jitter_buffer_delay	2-3
+jitter_buffer_type	minimize
+jitter_buffer_delay	0-5
 
 module_path		/usr/local/lib/baresip/modules
 

@@ -40,11 +40,10 @@ for ptime in 20 10 5 15 30 40; do
 
     sed -e "s/ptime=[0-9]*/ptime=$ptime/" -i accounts
     for buf in $ptime $(( 2*ptime )) $(( 3*ptime )) $(( 4*ptime )) $(( 6*ptime )); do
-#    for buf in $(( 3*ptime )) $(( 4*ptime )) $(( 6*ptime )); do
         echo "########### ptime $ptime buffer $buf ###############"
 
         sed -e "s/audio_buffer\s*[0-9]*\-.*/audio_buffer   $buf-160/" -i config
-        baresip -f . > /tmp/b.log &
+        baresip -f . > /tmp/b.log 2>&1 &
         sleep 1
         echo "/dial $target" | nc -N localhost 5555
 
@@ -69,5 +68,3 @@ for ptime in 20 10 5 15 30 40; do
         i=$(( i+1 ))
     done
 done
-
-cleanup_jitter
