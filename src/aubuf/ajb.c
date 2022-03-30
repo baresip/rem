@@ -35,8 +35,8 @@ struct ajb {
 
 	uint32_t ts0;        /**< previous timestamp              */
 	uint64_t tr0;        /**< previous time of arrival        */
-#if DEBUG_LEVEL >= 6
 	uint64_t tr00;       /**< arrival of first packet         */
+#if DEBUG_LEVEL >= 6
 	struct {
 		int32_t d;
 		uint32_t buftime;
