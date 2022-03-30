@@ -77,3 +77,21 @@ void auframe_mute(struct auframe *af)
 
 	memset(af->sampv, 0, auframe_size(af));
 }
+
+
+/**
+ * Get audio level (only calculated once)
+ *
+ * @note Set af->level = AULEVEL_UNDEF to force re-calculation
+ *
+ * @param af  Audio frame
+ *
+ * @return Audio level expressed in dBov on success and AULEVEL_UNDEF on error
+ */
+double auframe_level(struct auframe *af)
+{
+	if (af->level == AULEVEL_UNDEF)
+		af->level = aulevel_calc_dbov(af->fmt, af->sampv, af->sampc);
+
+	return af->level;
+}
