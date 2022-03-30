@@ -463,3 +463,9 @@ void aubuf_sort_auframe(struct aubuf *ab)
 {
 	list_sort(&ab->afl, frame_less_equal, NULL);
 }
+
+
+void aubuf_drop_auframe(struct aubuf *ab, struct auframe *af)
+{
+	ajb_drop(ab->ajb, af);
+}

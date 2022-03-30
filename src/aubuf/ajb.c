@@ -53,6 +53,7 @@ struct ajb {
 	bool started;        /**< Started flag                    */
 	uint32_t bufmin;     /**< Minimum buffer time [us]        */
 	struct auframe af;   /**< Audio frame of last ajb_get()   */
+	uint32_t dropped;    /**< Dropped audio frames counter    */
 };
 
 
@@ -237,9 +238,27 @@ void ajb_calc(struct ajb *ajb, struct auframe *af, size_t cur_sz)
 	plot_ajb(ajb, tr / 1000);
 #endif
 out:
-	lock_rel(ajb->lock);
 	ajb->ts0 = ts;
 	ajb->tr0 = tr;
+	lock_rel(ajb->lock);
+}
+
+
+/**
+ * This function is for reporting that the given audio frame is not appended.
+ * Instead the timestamp is stored in `ts0` to avoid a jump of the computed
+ * jitter value.
+ * @param ajb     Adaptive jitter buffer statistics
+ * @param af      Audio frame
+ */
+void ajb_drop(struct ajb *ajb, struct auframe *af)
+{
+	if (!ajb || !af)
+		return;
+
+	lock_write_get(ajb->lock);
+	ajb->ts0 = af->timestamp;
+	lock_rel(ajb->lock);
 }
 
 
