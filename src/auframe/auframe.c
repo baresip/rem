@@ -36,6 +36,7 @@ void auframe_init(struct auframe *af, enum aufmt fmt, void *sampv,
 	af->sampv = sampv;
 	af->sampc = sampc;
 	af->srate = srate;
+	af->level = AULEVEL_UNDEF;
 	af->ch = ch;
 }
 
