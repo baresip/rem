@@ -33,7 +33,7 @@ struct ajb {
 	int32_t jitter;      /**< Jitter in [us]                  */
 	struct lock *lock;
 
-	uint32_t ts0;        /**< previous timestamp              */
+	uint64_t ts0;        /**< previous timestamp              */
 	uint64_t tr0;        /**< previous time of arrival        */
 	uint64_t tr00;       /**< arrival of first packet         */
 #if DEBUG_LEVEL >= 6
@@ -189,7 +189,8 @@ void ajb_calc(struct ajb *ajb, struct auframe *af, size_t cur_sz)
 
 	da = abs(d);
 
-	buftime = cur_sz * 1000 / (af->srate * af->ch *  sz / 1000);
+	buftime = (uint32_t) (cur_sz * 1000 /
+			      (af->srate * af->ch *  sz / 1000));
 	if (ajb->started) {
 		ajb->avbuftime += ((int32_t) buftime - ajb->avbuftime) /
 				  BUFTIME_EMA_COEFF;
@@ -253,7 +254,7 @@ enum ajb_state ajb_get(struct ajb *ajb, struct auframe *af)
 	ajb->af = *af;
 
 	/* ptime in [us] */
-	ajb->ptime = af->sampc * 1000 * 1000 / af->srate;
+	ajb->ptime = (uint32_t) (af->sampc * 1000 * 1000 / af->srate);
 	if (!ajb->avbuftime)
 		goto out;
 
