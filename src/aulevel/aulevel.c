@@ -98,7 +98,7 @@ static double calc_rms_float(const float *data, size_t len)
  * @param sampv Audio samples
  * @param sampc Number of audio samples
  *
- * @return Audio level expressed in dBov
+ * @return Audio level expressed in dBov on success and AULEVEL_UNDEF on error
  */
 double aulevel_calc_dbov(int fmt, const void *sampv, size_t sampc)
 {

@@ -46,7 +46,7 @@ void   auframe_mute(struct auframe *af);
  *
  * @param af        Audio frame
  *
- * @return audio level in dBov
+ * @return Audio level expressed in dBov on success and AULEVEL_UNDEF on error
  */
 static inline double auframe_level(struct auframe *af)
 {
