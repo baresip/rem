@@ -1,7 +1,9 @@
 #!/bin/bash
 
-target=192.168.110.192
-netif=eno1
+#target=192.168.110.192
+#netif=eno1
+target=10.1.0.215
+netif=enp8s0
 
 function init_jitter () {
     sudo ip link add ifb1 type ifb || :
