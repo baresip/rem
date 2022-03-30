@@ -10,7 +10,7 @@
 #include <rem_aubuf.h>
 #include "ajb.h"
 
-#define DEBUG_LEVEL 6
+#define DEBUG_LEVEL 5
 
 /**
  * @brief The adaptive jitter computation is done by means of an exponential
