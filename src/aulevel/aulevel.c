@@ -98,7 +98,7 @@ static double calc_rms_float(const float *data, size_t len)
  * @param sampv Audio samples
  * @param sampc Number of audio samples
  *
- * @return Audio level expressed in dBov
+ * @return Audio level expressed in dBov on success and AULEVEL_UNDEF on error
  */
 double aulevel_calc_dbov(int fmt, const void *sampv, size_t sampc)
 {
@@ -107,7 +107,7 @@ double aulevel_calc_dbov(int fmt, const void *sampv, size_t sampc)
 	double rms, dbov;
 
 	if (!sampv || !sampc)
-		return AULEVEL_MIN;
+		return AULEVEL_UNDEF;
 
 	switch (fmt) {
 
@@ -126,7 +126,7 @@ double aulevel_calc_dbov(int fmt, const void *sampv, size_t sampc)
 	default:
 		re_printf("aulevel: sample format not supported (%s)\n",
 			aufmt_name(fmt));
-		return AULEVEL_MIN;
+		return AULEVEL_UNDEF;
 	}
 
 	dbov = 20 * log10(rms);
