@@ -19,4 +19,3 @@ void ajb_calc(struct ajb *ajb, struct auframe *af, size_t sampc);
 enum ajb_state ajb_get(struct ajb *ajb, struct auframe *af);
 int32_t ajb_debug(const struct ajb *ajb);
 void plot_underrun(struct ajb *ajb);
-uint32_t ajb_bufmin(struct ajb *ajb);
