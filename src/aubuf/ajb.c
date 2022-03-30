@@ -301,10 +301,3 @@ int32_t ajb_debug(const struct ajb *ajb)
 
 	return jitter;
 }
-
-
-uint32_t ajb_bufmin(struct ajb *ajb)
-{
-	size_t sz = aufmt_sample_size(ajb->af.fmt);
-	return ajb->bufmin / 1000 * ajb->af.sampc * sz / 1000;
-}
