@@ -21,6 +21,7 @@ static inline int aubuf_write(struct aubuf *ab, const uint8_t *p, size_t sz)
 {
 	struct auframe af = {
 		.fmt = AUFMT_RAW,
+		.srate = 0,
 		.sampv = (uint8_t *)p,
 		.sampc = sz,
 		.timestamp = 0,
@@ -42,6 +43,7 @@ static inline int aubuf_write_samp(struct aubuf *ab, const int16_t *sampv,
 {
 	struct auframe af = {
 		.fmt = AUFMT_S16LE,
+		.srate = 0,
 		.sampv = (uint8_t *)sampv,
 		.sampc = sampc,
 		.timestamp = 0,
@@ -56,6 +58,7 @@ static inline void aubuf_read(struct aubuf *ab, uint8_t *p, size_t sz)
 {
 	struct auframe af = {
 		.fmt = AUFMT_RAW,
+		.srate = 0,
 		.sampv = p,
 		.sampc = sz,
 		.timestamp = 0,
@@ -71,6 +74,7 @@ static inline void aubuf_read_samp(struct aubuf *ab, int16_t *sampv,
 {
 	struct auframe af = {
 		.fmt = AUFMT_S16LE,
+		.srate = 0,
 		.sampv = (uint8_t *)sampv,
 		.sampc = sampc,
 		.timestamp = 0,
