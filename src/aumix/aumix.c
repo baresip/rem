@@ -116,7 +116,7 @@ static void *aumix_thread(void *arg)
 		}
 		else {
 			pthread_mutex_unlock(&mix->mutex);
-			(void)usleep(4000);
+			sys_usleep(4000);
 			pthread_mutex_lock(&mix->mutex);
 		}
 
