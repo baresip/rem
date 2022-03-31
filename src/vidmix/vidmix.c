@@ -198,7 +198,7 @@ static void *vidmix_thread(void *arg)
 		uint64_t now;
 
 		pthread_mutex_unlock(&src->mutex);
-		(void)usleep(4000);
+		sys_usleep(4000);
 		pthread_mutex_lock(&src->mutex);
 
 		now = tmr_jiffies();
