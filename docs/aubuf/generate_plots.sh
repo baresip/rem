@@ -4,6 +4,7 @@
 #netif=eno1
 target=10.1.0.215
 netif=enp8s0
+once=true
 
 function init_jitter () {
     sudo ip link add ifb1 type ifb || :
@@ -68,5 +69,9 @@ for ptime in 20 10 5 15 30 40; do
         ./ajb.plot
         cp ajb.eps ~/commend/baresip/aubuf/plots/ptime${i}_${ptime}_buf_${buf}_jitter_0.eps
         i=$(( i+1 ))
+
+        if [ $once == "true" ]; then
+            exit 0
+        fi
     done
 done
