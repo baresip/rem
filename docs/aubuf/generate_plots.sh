@@ -33,7 +33,7 @@ function cleanup_jitter() {
     sudo ip link delete ifb1
 }
 
-trap "disable_jitter; cleanup_jitter" EXIT
+trap "disable_jitter; cleanup_jitter; killall -q baresip" EXIT
 
 init_jitter
 
