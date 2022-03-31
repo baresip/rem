@@ -23,7 +23,8 @@ static inline int aubuf_write(struct aubuf *ab, const uint8_t *p, size_t sz)
 		.fmt = AUFMT_RAW,
 		.sampv = (uint8_t *)p,
 		.sampc = sz,
-		.timestamp = 0
+		.timestamp = 0,
+		.level = AULEVEL_UNDEF
 	};
 
 	return aubuf_write_auframe(ab, &af);
@@ -43,7 +44,8 @@ static inline int aubuf_write_samp(struct aubuf *ab, const int16_t *sampv,
 		.fmt = AUFMT_S16LE,
 		.sampv = (uint8_t *)sampv,
 		.sampc = sampc,
-		.timestamp = 0
+		.timestamp = 0,
+		.level = AULEVEL_UNDEF
 	};
 
 	return aubuf_write_auframe(ab, &af);
@@ -56,7 +58,8 @@ static inline void aubuf_read(struct aubuf *ab, uint8_t *p, size_t sz)
 		.fmt = AUFMT_RAW,
 		.sampv = p,
 		.sampc = sz,
-		.timestamp = 0
+		.timestamp = 0,
+		.level = AULEVEL_UNDEF
 	};
 
 	aubuf_read_auframe(ab, &af);
@@ -70,7 +73,8 @@ static inline void aubuf_read_samp(struct aubuf *ab, int16_t *sampv,
 		.fmt = AUFMT_S16LE,
 		.sampv = (uint8_t *)sampv,
 		.sampc = sampc,
-		.timestamp = 0
+		.timestamp = 0,
+		.level = AULEVEL_UNDEF
 	};
 
 	aubuf_read_auframe(ab, &af);
