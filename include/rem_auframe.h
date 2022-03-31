@@ -36,6 +36,7 @@ static inline void auframe_update(struct auframe *af, void *sampv,
 	af->sampv = sampv;
 	af->sampc = sampc;
 	af->timestamp = timestamp;
+	af->level = AULEVEL_UNDEF;
 }
 
 size_t auframe_size(const struct auframe *af);

@@ -6,6 +6,7 @@
 #include <string.h>
 #include <re.h>
 #include <rem_au.h>
+#include <rem_aulevel.h>
 #include <rem_auframe.h>
 #include <rem_aubuf.h>
 
