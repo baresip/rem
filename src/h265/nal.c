@@ -126,7 +126,7 @@ bool h265_is_keyframe(enum h265_naltype type)
 
 static const uint8_t *h265_find_startcode(const uint8_t *p, const uint8_t *end)
 {
-	const uint8_t *a = p + 4 - ((long)p & 3);
+	const uint8_t *a = p + 4 - ((size_t)p & 3);
 
 	for (end -= 3; p < a && p < end; p++ ) {
 		if (p[0] == 0 && p[1] == 0 && p[2] == 1)
