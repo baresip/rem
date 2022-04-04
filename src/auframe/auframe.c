@@ -111,35 +111,14 @@ double auframe_level(struct auframe *af)
  * Computes audio frame volume and compares with a boundary to decide if it is
  * nearly silence
  *
- * Note: faster than auframe_level for s16le
- *   - no sqrt
- *   - no logarithm
- *   - early loop exit for non-silence
- *
  * @param af  Audio frame
  *
  * @return true if the frame is nearly silence
  */
 bool auframe_silence(struct auframe *af)
 {
-	const int16_t *v;
-	int32_t sum = 0;
-	size_t i;
-
-	if (af->fmt != AUFMT_S16LE) {
-		/* TODO: A good value for silence if not s16le. */
-		/*       It should be not too low. Otherwise ajb will be
-		 *       blocked.                               */
-		return auframe_level(af) < -70.;
-	}
-
-	v = af->sampv;
-	for (i = 0; i < af->sampc; i++) {
-		sum += v[i]*v[i];
-
-		if (sum > (int32_t) (i + 1) * SILENCE_Q)
-			return false;
-	}
-
-	return true;
+	/* TODO: A good value for silence if not s16le. */
+	/*       It should be not too low. Otherwise ajb will be
+	 *       blocked.                               */
+	return auframe_level(af) < -70.;
 }
