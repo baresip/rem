@@ -37,16 +37,14 @@
  */
 static double calc_rms_s16(const int16_t *data, size_t len)
 {
-	double sum = 0;
+	int64_t sum = 0;
 	size_t i;
 
 	if (!data || !len)
 		return .0;
 
 	for (i = 0; i < len; i++) {
-		const double sample = data[i];
-
-		sum += sample * sample;
+		sum += data[i] * data[i];
 	}
 
 	return sqrt(sum / (double)len);
