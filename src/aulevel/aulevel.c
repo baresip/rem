@@ -37,7 +37,7 @@
  */
 static double calc_rms_s16(const int16_t *data, size_t len)
 {
-	int32_t sum = 0;
+	int64_t sum = 0;
 	size_t i;
 
 	if (!data || !len)
