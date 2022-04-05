@@ -11,10 +11,6 @@
 #include <rem_auframe.h>
 
 
-enum {
-	SILENCE_Q = 1024 * 1024,  /* Quadratic sample value for silence */
-};
-
 /**
  * Initialize an audio frame
  *
