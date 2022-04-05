@@ -280,7 +280,8 @@ enum ajb_state ajb_get(struct ajb *ajb, struct auframe *af)
 	if (!ajb->avbuftime)
 		goto out;
 
-	if (ajb->as == AJB_GOOD || auframe_level(af) > ajb->silence)
+	if (ajb->as == AJB_GOOD ||
+	    (ajb->silence < 0. && auframe_level(af) > ajb->silence))
 		goto out;
 
 	as = ajb->as;
