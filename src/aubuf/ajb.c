@@ -55,6 +55,7 @@ struct ajb {
 	uint32_t bufmin;     /**< Minimum buffer time [us]        */
 	struct auframe af;   /**< Audio frame of last ajb_get()   */
 	uint32_t dropped;    /**< Dropped audio frames counter    */
+	double silence;      /**< Silence audio level             */
 };
 
 
@@ -115,7 +116,7 @@ void plot_underrun(struct ajb *ajb)
  *
  * @param ajb    Adaptive jitter buffer statistics
  */
-struct ajb *ajb_alloc(void)
+struct ajb *ajb_alloc(double silence)
 {
 	struct ajb *ajb;
 	int err;
@@ -131,6 +132,7 @@ struct ajb *ajb_alloc(void)
 	ajb->ts0 = 0;
 	ajb->tr0 = 0;
 	ajb->as = AJB_GOOD;
+	ajb->silence = silence;
 
 out:
 	if (err)
@@ -278,7 +280,7 @@ enum ajb_state ajb_get(struct ajb *ajb, struct auframe *af)
 	if (!ajb->avbuftime)
 		goto out;
 
-	if (ajb->as == AJB_GOOD)
+	if (ajb->as == AJB_GOOD || auframe_level(af) > ajb->silence)
 		goto out;
 
 	as = ajb->as;

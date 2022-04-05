@@ -34,6 +34,7 @@ struct aubuf {
 #endif
 	enum aubuf_mode mode;
 	struct ajb *ajb;         /**< Adaptive jitter buffer statistics      */
+	double silence;          /**< Silence volume in negative [dB]        */
 };
 
 
@@ -146,6 +147,21 @@ void aubuf_set_mode(struct aubuf *ab, enum aubuf_mode mode)
 		return;
 
 	ab->mode = mode;
+}
+
+
+/**
+ * Sets the volume level for silence
+ *
+ * @param ab       Audio buffer
+ * @param silence  Volume level in negative [dB]
+ */
+void aubuf_set_silence(struct aubuf *ab, double silence)
+{
+	if (!ab)
+		return;
+
+	ab->silence = silence;
 }
 
 
@@ -296,7 +312,7 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 		return;
 
 	if (!ab->ajb && ab->mode == AUBUF_ADAPTIVE)
-		ab->ajb = ajb_alloc();
+		ab->ajb = ajb_alloc(ab->silence);
 
 	lock_write_get(ab->lock);
 	as = ajb_get(ab->ajb, af);
