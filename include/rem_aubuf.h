@@ -12,6 +12,7 @@ enum aubuf_mode {
 
 int  aubuf_alloc(struct aubuf **abp, size_t min_sz, size_t max_sz);
 void aubuf_set_mode(struct aubuf *ab, enum aubuf_mode mode);
+void aubuf_set_silence(struct aubuf *ab, double silence);
 int  aubuf_resize(struct aubuf *ab, size_t min_sz, size_t max_sz);
 int  aubuf_write_auframe(struct aubuf *ab, struct auframe *af);
 int  aubuf_append_auframe(struct aubuf *ab, struct mbuf *mb,
