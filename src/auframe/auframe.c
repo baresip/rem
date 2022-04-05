@@ -105,20 +105,3 @@ double auframe_level(struct auframe *af)
 
 	return af->level;
 }
-
-
-/**
- * Computes audio frame volume and compares with a boundary to decide if it is
- * nearly silence
- *
- * @param af  Audio frame
- *
- * @return true if the frame is nearly silence
- */
-bool auframe_silence(struct auframe *af)
-{
-	/* TODO: A good value for silence if not s16le. */
-	/*       It should be not too low. Otherwise ajb will be
-	 *       blocked.                               */
-	return auframe_level(af) < -70.;
-}
