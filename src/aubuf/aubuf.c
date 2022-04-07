@@ -317,10 +317,10 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 	lock_write_get(ab->lock);
 	as = ajb_get(ab->ajb, af);
 	if (as == AJB_LOW) {
-#ifdef AUBUF_DEBUG
+#if AUBUF_DEBUG
 		(void)re_printf("aubuf: inc buffer due to high jitter\n");
-#endif
 		ajb_debug(ab->ajb);
+#endif
 		goto out;
 	}
 
@@ -343,10 +343,10 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 
 	read_auframe(ab, af);
 	if (as == AJB_HIGH) {
-#ifdef AUBUF_DEBUG
+#if AUBUF_DEBUG
 		(void)re_printf("aubuf: drop a frame to reduce latency\n");
-#endif
 		ajb_debug(ab->ajb);
+#endif
 		read_auframe(ab, af);
 	}
 
