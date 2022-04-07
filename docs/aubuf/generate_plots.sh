@@ -67,7 +67,10 @@ for ptime in 20 10 5 15 30 40; do
         grep -Eo "plot_ajb.*" /tmp/b.log  > ajb.dat
         grep -Eo "plot_underrun.*" /tmp/b.log  > underrun.dat
         ./ajb.plot
-        cp ajb.eps ~/commend/baresip/aubuf/plots/ptime${i}_${ptime}_buf_${buf}_jitter_0.eps
+        if [ ! -d plots ]; then
+            mkdir plots
+        fi
+        cp ajb.eps plots/ptime${i}_${ptime}_buf_${buf}_jitter_0.eps
         i=$(( i+1 ))
 
         if [ $once == "true" ]; then
