@@ -93,4 +93,4 @@ add_library(${PROJECT_NAME}
 # Main target object
 #
 
-target_link_libraries(${PROJECT_NAME} -lre -lpthread)
+target_link_libraries(${PROJECT_NAME} re -lpthread -lm)
