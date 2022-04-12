@@ -173,7 +173,6 @@ void ajb_calc(struct ajb *ajb, struct auframe *af, size_t cur_sz)
 	int32_t da;                        /**< Absolut time shift in [us]   */
 	int32_t s;                         /**< EMA coefficient              */
 	int64_t ts;                        /**< Time stamp                   */
-	uint32_t tsd;                      /**< Time stamp divisor           */
 	size_t sz;
 
 
@@ -184,12 +183,11 @@ void ajb_calc(struct ajb *ajb, struct auframe *af, size_t cur_sz)
 	sz = aufmt_sample_size(af->fmt);
 	ts = (int64_t) af->timestamp;
 	tr = tmr_jiffies_usec();
-	tsd = af->srate / 1000;
 	if (!ajb->ts0)
 		goto out;
 
 	d = (int32_t) ( ((int64_t) tr - (int64_t) ajb->tr0) -
-			(ts - (int64_t) ajb->ts0) * 1000 / tsd );
+			(ts - (int64_t) ajb->ts0) );
 
 	da = abs(d);
 

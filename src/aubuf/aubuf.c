@@ -86,12 +86,13 @@ static void read_auframe(struct aubuf *ab, struct auframe *af)
 		af->ch	      = f->af.ch;
 		af->timestamp = f->af.timestamp;
 
-		if (af->srate && af->ch && sample_size)
-			f->af.timestamp += n * AUDIO_TIMEBASE /
-					   (af->srate * af->ch * sample_size);
-
-		if (!mbuf_get_left(f->mb))
+		if (!mbuf_get_left(f->mb)) {
 			mem_deref(f);
+		}
+		else if (af->srate && af->ch && sample_size) {
+			f->af.timestamp += n * AUDIO_TIMEBASE /
+				(af->srate * af->ch * sample_size);
+		}
 
 		if (n == sz)
 			break;
