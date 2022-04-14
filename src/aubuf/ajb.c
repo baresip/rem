@@ -45,9 +45,11 @@ struct ajb {
 		uint32_t bufmax;
 		enum ajb_state as;
 	} plot;
+
+	char buf[136];       /**< Buffer for trace                */
 #endif
 
-	enum ajb_state as;    /**< computed jitter buffer state    */
+	enum ajb_state as;   /**< computed jitter buffer state    */
 
 	uint32_t ptime;      /**< Packet time [us]                */
 	int32_t avbuftime;   /**< average buffered time [us]      */
@@ -64,6 +66,9 @@ static void destructor(void *arg)
 	struct ajb *ajb = arg;
 
 	mem_deref(ajb->lock);
+#if DEBUG_LEVEL >= 6
+	(void)re_trace_close();
+#endif
 }
 
 
@@ -76,7 +81,8 @@ static void plot_ajb(struct ajb *ajb, uint64_t tr)
 		ajb->tr00 = tr;
 
 	treal = (uint32_t) (tr - ajb->tr00);
-	re_printf("%s, 0x%p, %u, %i, %u, %u, %u, %i, %i, %u\n",
+	re_snprintf(ajb->buf, sizeof(ajb->buf),
+		    "%s, 0x%p, %u, %i, %u, %u, %u, %i, %i, %u",
 			__func__,               /* row 1  - grep */
 			ajb,                    /* row 2  - grep optional */
 			treal,                  /* row 3  - plot x-axis */
@@ -87,10 +93,13 @@ static void plot_ajb(struct ajb *ajb, uint64_t tr)
 			ajb->plot.bufmin,       /* row 8  - plot */
 			ajb->plot.bufmax,       /* row 9  - plot */
 			ajb->plot.as);          /* row 10 - plot */
+	re_trace_event("ajb", "plot", 'P', NULL, 0, RE_TRACE_ARG_STRING_COPY,
+		       "line", ajb->buf);
 }
 #endif
 
 
+#if DEBUG_LEVEL >= 6
 void plot_underrun(struct ajb *ajb)
 {
 	uint64_t tr;
@@ -103,12 +112,20 @@ void plot_underrun(struct ajb *ajb)
 		ajb->tr00 = tr;
 
 	treal = (uint32_t) (tr - ajb->tr00);
-	re_printf("%s, 0x%p, %u, %i\n",
+	re_snprintf(ajb->buf, sizeof(ajb->buf), "%s, 0x%p, %u, %i",
 			__func__,               /* row 1  - grep */
 			ajb,                    /* row 2  - grep optional */
 			treal,                  /* row 3  - plot optional */
 			1);                     /* row 4  - plot */
+	re_trace_event("ajb", "plot", 'U', NULL, 0, RE_TRACE_ARG_STRING_COPY,
+		       "line", ajb->buf);
 }
+#else
+void plot_underrun(struct ajb *ajb)
+{
+	(void)ajb;
+}
+#endif
 
 
 /**
@@ -133,6 +150,9 @@ struct ajb *ajb_alloc(double silence)
 	ajb->tr0 = 0;
 	ajb->as = AJB_GOOD;
 	ajb->silence = silence;
+#if DEBUG_LEVEL >= 6
+	(void)re_trace_init("ajb.json");
+#endif
 
 out:
 	if (err)

@@ -34,6 +34,11 @@ function cleanup_jitter() {
     sudo ip link delete ifb1
 }
 
+if ! which jq; then
+    echo "Install jq"
+    exit 1
+fi
+
 trap "disable_jitter; cleanup_jitter; killall -q baresip" EXIT
 
 init_jitter
@@ -64,8 +69,8 @@ for ptime in 20 10 5 15 30 40; do
 
         sleep 1
 
-        grep -Eo "plot_ajb.*" /tmp/b.log  > ajb.dat
-        grep -Eo "plot_underrun.*" /tmp/b.log  > underrun.dat
+        cat ajb.json | jq -r '.traceEvents[] | select (.ph == "P") | .args.line' > ajb.dat
+        cat ajb.json | jq -r '.traceEvents[] | select (.ph == "U") | .args.line' > underrun.dat
         ./ajb.plot
         if [ ! -d plots ]; then
             mkdir plots
