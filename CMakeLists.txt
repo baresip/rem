@@ -94,3 +94,4 @@ add_library(${PROJECT_NAME}
 #
 
 target_link_libraries(${PROJECT_NAME} re -lpthread -lm)
+set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
