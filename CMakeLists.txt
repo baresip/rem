@@ -62,6 +62,7 @@ add_definitions(-DVERSION="${PROJECT_VERSION}")
 add_library(${PROJECT_NAME}
   src/aac/aac.c
   src/au/fmt.c
+  src/au/util.c
   src/aubuf/aubuf.c
   src/aubuf/ajb.c
   src/auconv/auconv.c
