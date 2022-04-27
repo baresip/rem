@@ -42,5 +42,3 @@ static inline void auframe_update(struct auframe *af, void *sampv,
 size_t auframe_size(const struct auframe *af);
 void   auframe_mute(struct auframe *af);
 double auframe_level(struct auframe *af);
-
-uint32_t calc_nsamp(uint32_t srate, uint8_t channels, uint16_t ptime);
