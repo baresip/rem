@@ -91,7 +91,6 @@ MODULES += vid vidconv
 MODULES += aac
 MODULES += avc
 MODULES += h264
-MODULES += h265
 
 LIBS    += -lm
 
