@@ -10,7 +10,6 @@
 #include <unistd.h>
 #endif
 #define __USE_UNIX98 1
-#include <pthread.h>
 #include <string.h>
 #include <re.h>
 #include <rem_vid.h>
@@ -26,7 +25,7 @@ struct vidmix {
 
 struct vidmix_source {
 	struct le le;
-	pthread_t thread;
+	thrd_t thread;
 	mtx_t mutex;
 	struct vidframe *frame_tx;
 	struct vidframe *frame_rx;
@@ -183,7 +182,7 @@ static inline unsigned calc_rows(unsigned n)
 }
 
 
-static void *vidmix_thread(void *arg)
+static int vidmix_thread(void *arg)
 {
 	struct vidmix_source *src = arg;
 	struct vidmix *mix = src->mix;
@@ -266,11 +265,11 @@ static void *vidmix_thread(void *arg)
 
 	mtx_unlock(&src->mutex);
 
-	return NULL;
+	return 0;
 }
 
 
-static void *content_thread(void *arg)
+static int content_thread(void *arg)
 {
 	struct vidmix_source *src = arg;
 	struct vidmix *mix = src->mix;
@@ -312,7 +311,7 @@ static void *content_thread(void *arg)
 
 	mtx_unlock(&src->mutex);
 
-	return NULL;
+	return 0;
 }
 
 
@@ -499,7 +498,7 @@ int vidmix_source_start(struct vidmix_source *src)
 
 	src->run = true;
 
-	err = pthread_create(&src->thread, NULL,
+	err = thrd_create(&src->thread,
 			     src->content ? content_thread : vidmix_thread,
 			     src);
 	if (err) {
@@ -524,7 +523,7 @@ void vidmix_source_stop(struct vidmix_source *src)
 		mtx_lock(&src->mutex);
 		src->run = false;
 		mtx_unlock(&src->mutex);
-		pthread_join(src->thread, NULL);
+		thrd_join(src->thread, NULL);
 	}
 }
 
