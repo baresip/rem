@@ -78,9 +78,6 @@ add_library(${PROJECT_NAME}
   src/fir/fir.c
   src/g711/g711.c
   src/goertzel/goertzel.c
-  src/h264/getbit.c
-  src/h264/nal.c
-  src/h264/sps.c
   src/vid/draw.c
   src/vid/fmt.c
   src/vid/frame.c

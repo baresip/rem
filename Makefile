@@ -90,7 +90,6 @@ endif
 MODULES += vid vidconv
 MODULES += aac
 MODULES += avc
-MODULES += h264
 
 LIBS    += -lm
 
