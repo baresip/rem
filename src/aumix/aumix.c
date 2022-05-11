@@ -9,7 +9,6 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include <pthread.h>
 #include <string.h>
 #include <re.h>
 #include <rem_au.h>
@@ -22,10 +21,10 @@
 
 /** Defines an Audio mixer */
 struct aumix {
-	pthread_mutex_t mutex;
-	pthread_cond_t cond;
+	mtx_t mutex;
+	cnd_t cond;
 	struct list srcl;
-	pthread_t thread;
+	thrd_t thread;
 	struct aufile *af;
 	uint32_t ptime;
 	uint32_t frame_size;
@@ -60,12 +59,12 @@ static void destructor(void *arg)
 
 	if (mix->run) {
 
-		pthread_mutex_lock(&mix->mutex);
+		mtx_lock(&mix->mutex);
 		mix->run = false;
-		pthread_cond_signal(&mix->cond);
-		pthread_mutex_unlock(&mix->mutex);
+		cnd_signal(&mix->cond);
+		mtx_unlock(&mix->mutex);
 
-		pthread_join(mix->thread, NULL);
+		thrd_join(mix->thread, NULL);
 	}
 
 	mem_deref(mix->af);
@@ -77,9 +76,9 @@ static void source_destructor(void *arg)
 	struct aumix_source *src = arg;
 
 	if (src->le.list) {
-		pthread_mutex_lock(&src->mix->mutex);
+		mtx_lock(&src->mix->mutex);
 		list_unlink(&src->le);
-		pthread_mutex_unlock(&src->mix->mutex);
+		mtx_unlock(&src->mix->mutex);
 	}
 
 	mem_deref(src->aubuf);
@@ -88,7 +87,7 @@ static void source_destructor(void *arg)
 }
 
 
-static void *aumix_thread(void *arg)
+static int aumix_thread(void *arg)
 {
 	uint8_t *silence, *frame, *base_frame;
 	struct aumix *mix = arg;
@@ -102,7 +101,7 @@ static void *aumix_thread(void *arg)
 	if (!silence || !frame || !mix_frame)
 		goto out;
 
-	pthread_mutex_lock(&mix->mutex);
+	mtx_lock(&mix->mutex);
 
 	while (mix->run) {
 
@@ -111,13 +110,13 @@ static void *aumix_thread(void *arg)
 
 		if (!mix->srcl.head) {
 			mix->af = mem_deref(mix->af);
-			pthread_cond_wait(&mix->cond, &mix->mutex);
+			cnd_wait(&mix->cond, &mix->mutex);
 			ts = 0;
 		}
 		else {
-			pthread_mutex_unlock(&mix->mutex);
+			mtx_unlock(&mix->mutex);
 			sys_usleep(4000);
-			pthread_mutex_lock(&mix->mutex);
+			mtx_lock(&mix->mutex);
 		}
 
 		now = tmr_jiffies();
@@ -185,14 +184,14 @@ static void *aumix_thread(void *arg)
 		ts += mix->ptime;
 	}
 
-	pthread_mutex_unlock(&mix->mutex);
+	mtx_unlock(&mix->mutex);
 
  out:
 	mem_deref(mix_frame);
 	mem_deref(silence);
 	mem_deref(frame);
 
-	return NULL;
+	return 0;
 }
 
 
@@ -224,17 +223,17 @@ int aumix_alloc(struct aumix **mixp, uint32_t srate,
 	mix->srate      = srate;
 	mix->ch         = ch;
 
-	err = pthread_mutex_init(&mix->mutex, NULL);
+	err = mtx_init(&mix->mutex, mtx_plain);
 	if (err)
 		goto out;
 
-	err = pthread_cond_init(&mix->cond, NULL);
+	err = cnd_init(&mix->cond);
 	if (err)
 		goto out;
 
 	mix->run = true;
 
-	err = pthread_create(&mix->thread, NULL, aumix_thread, mix);
+	err = thrd_create(&mix->thread, aumix_thread, mix);
 	if (err) {
 		mix->run = false;
 		goto out;
@@ -277,10 +276,10 @@ int aumix_playfile(struct aumix *mix, const char *filepath)
 		return EINVAL;
 	}
 
-	pthread_mutex_lock(&mix->mutex);
+	mtx_lock(&mix->mutex);
 	mem_deref(mix->af);
 	mix->af = af;
-	pthread_mutex_unlock(&mix->mutex);
+	mtx_unlock(&mix->mutex);
 
 	return 0;
 }
@@ -388,17 +387,17 @@ void aumix_source_enable(struct aumix_source *src, bool enable)
 
 	mix = src->mix;
 
-	pthread_mutex_lock(&mix->mutex);
+	mtx_lock(&mix->mutex);
 
 	if (enable) {
 		list_append(&mix->srcl, &src->le, src);
-		pthread_cond_signal(&mix->cond);
+		cnd_signal(&mix->cond);
 	}
 	else {
 		list_unlink(&src->le);
 	}
 
-	pthread_mutex_unlock(&mix->mutex);
+	mtx_unlock(&mix->mutex);
 }
 
 
