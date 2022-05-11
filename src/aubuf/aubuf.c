@@ -233,7 +233,7 @@ int aubuf_append_auframe(struct aubuf *ab, struct mbuf *mb, struct auframe *af)
 	ab->cur_sz += mbuf_get_left(mb);
 
 	max_sz = ab->started ? ab->max_sz : ab->wish_sz + 1;
-	if (max_sz && ab->cur_sz > max_sz) {
+	if (ab->max_sz && ab->cur_sz > max_sz) {
 #if AUBUF_DEBUG
 		if (ab->started) {
 			++ab->stats.or;
