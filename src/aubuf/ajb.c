@@ -334,11 +334,14 @@ int32_t ajb_debug(const struct ajb *ajb)
 {
 	int32_t jitter;
 
+	if (!ajb)
+		return 0;
+
 	lock_write_get(ajb->lock);
-	jitter = ajb ? ajb->jitter : 0;
+	jitter = ajb->jitter;
 	lock_rel(ajb->lock);
-	re_printf("  ajb jitter: %d, ajb avbuftime: %d\n",
-		  ajb->jitter / 1000, ajb->avbuftime);
+	re_printf("  ajb jitter: %d, ajb avbuftime: %d\n", jitter / 1000,
+		  ajb->avbuftime);
 
 	return jitter;
 }
