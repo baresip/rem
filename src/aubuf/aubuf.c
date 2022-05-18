@@ -340,6 +340,9 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 			plot_underrun(ab->ajb);
 		}
 #endif
+		if (!ab->filling)
+			ajb_reset(ab->ajb);
+
 		filling = ab->filling;
 		ab->filling = true;
 		memset(af->sampv, 0, sz);
