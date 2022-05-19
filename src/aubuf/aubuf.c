@@ -491,11 +491,17 @@ size_t aubuf_cur_size(const struct aubuf *ab)
  */
 void aubuf_sort_auframe(struct aubuf *ab)
 {
+	if (!ab)
+		return;
+
 	list_sort(&ab->afl, frame_less_equal, NULL);
 }
 
 
 void aubuf_drop_auframe(struct aubuf *ab, struct auframe *af)
 {
+	if (!ab)
+		return;
+
 	ajb_drop(ab->ajb, af);
 }
