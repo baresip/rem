@@ -112,3 +112,29 @@ void auconv_to_s16(int16_t *dst_sampv, enum aufmt src_fmt,
 		return;
 	}
 }
+
+
+void auconv_to_float(float *dst_sampv, enum aufmt src_fmt,
+		     const void *src_sampv, size_t sampc)
+{
+	const int16_t *s16;
+
+	if (!dst_sampv || !src_sampv || !sampc)
+		return;
+
+	switch (src_fmt) {
+
+	case AUFMT_S16LE:
+		s16 = src_sampv;
+		for (size_t i=0; i<sampc; i++) {
+			dst_sampv[i] = ausamp_short2float(s16[i]);
+		}
+		break;
+
+	default:
+		re_fprintf(stderr, "auconv: sample format %d (%s)"
+			   " not supported\n",
+			   src_fmt, aufmt_name(src_fmt));
+		break;
+	}
+}
