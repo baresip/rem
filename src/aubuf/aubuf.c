@@ -82,10 +82,10 @@ static void aubuf_destructor(void *arg)
 
 static void read_auframe(struct aubuf *ab, struct auframe *af)
 {
-	struct le *le	   = ab->afl.head;
-	size_t sample_size = aufmt_sample_size(af->fmt);
-	size_t sz	   = auframe_size(af);
-	uint8_t *p	   = af->sampv;
+	struct le *le  = ab->afl.head;
+	size_t sz      = auframe_size(af);
+	uint8_t *p     = af->sampv;
+	size_t samp_sz = aufmt_sample_size(af->fmt);
 
 	while (le) {
 		struct frame *f = le->data;
@@ -107,9 +107,9 @@ static void read_auframe(struct aubuf *ab, struct auframe *af)
 			list_unlink(&f->le_afl);
 			f->free = true;
 		}
-		else if (af->srate && af->ch && sample_size) {
+		else if (af->srate && af->ch && samp_sz) {
 			f->af.timestamp += n * AUDIO_TIMEBASE /
-					   (af->srate * af->ch * sample_size);
+					   (af->srate * af->ch * samp_sz);
 		}
 
 		if (n == sz)
@@ -336,11 +336,11 @@ int aubuf_write_auframe(struct aubuf *ab, struct auframe *af)
 			return ENOMEM;
 	}
 
-	f->free	   = false;
-	f->sz	   = sz;
-	f->af	   = *af;
-	f->mb->pos = 0;
+	f->free = false;
+	f->sz	= sz;
+	f->af	= *af;
 
+	f->mb->pos = 0;
 	(void)mbuf_write_mem(f->mb, af->sampv, f->sz);
 	f->mb->pos = 0;
 
