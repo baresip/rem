@@ -185,7 +185,7 @@ void ajb_reset(struct ajb *ajb)
  * @param af      Audio frame
  * @param cur_sz  Current aubuf size
  */
-void ajb_calc(struct ajb *ajb, struct auframe *af, size_t cur_sz)
+void ajb_calc(struct ajb *ajb, const struct auframe *af, size_t cur_sz)
 {
 	uint64_t tr;                       /**< Real time in [us]            */
 	uint32_t buftime, bufmax, bufmin;  /**< Buffer time in [us]          */
@@ -272,7 +272,7 @@ out:
  * @param ajb     Adaptive jitter buffer statistics
  * @param af      Audio frame
  */
-void ajb_drop(struct ajb *ajb, struct auframe *af)
+void ajb_drop(struct ajb *ajb, const struct auframe *af)
 {
 	if (!ajb || !af)
 		return;
