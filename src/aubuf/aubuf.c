@@ -5,6 +5,7 @@
  */
 #include <string.h>
 #include <re.h>
+#include <re_atomic.h>
 #include <rem_au.h>
 #include <rem_aulevel.h>
 #include <rem_auframe.h>
@@ -15,10 +16,20 @@
 #define AUBUF_DEBUG 0
 #define AUDIO_TIMEBASE 1000000U
 
+/* Values for startup preallocation, can be tuned if needed */
+enum {
+	SRATE	 = 48000, /* Default sample rate in [Hz] */
+	CHANNELS = 2,	  /* Default number of channels  */
+	PTIME	 = 20,	  /* Default packet time in [ms] */
+	BYTES	 = 2,	  /* Default S16 size */
+	FRAMES	 = 10,	  /* Preallocate 200ms buffer */
+	SAMPSZ	 = SRATE * CHANNELS * PTIME * BYTES / 1000,
+};
 
 /** Locked audio-buffer with almost zero-copy */
 struct aubuf {
 	struct list afl;
+	struct list pfl;
 	struct lock *lock;
 	size_t wish_sz;
 	size_t cur_sz;
@@ -38,11 +49,13 @@ struct aubuf {
 	double silence;          /**< Silence volume in negative [dB]        */
 };
 
-
 struct frame {
-	struct le le;
+	struct le le_afl;
+	struct le le_pfl;
 	struct mbuf *mb;
 	struct auframe af;
+	size_t sz;
+	RE_ATOMIC bool free;
 };
 
 
@@ -50,7 +63,8 @@ static void frame_destructor(void *arg)
 {
 	struct frame *f = arg;
 
-	list_unlink(&f->le);
+	list_unlink(&f->le_afl);
+	list_unlink(&f->le_pfl);
 	mem_deref(f->mb);
 }
 
@@ -60,6 +74,7 @@ static void aubuf_destructor(void *arg)
 	struct aubuf *ab = arg;
 
 	list_flush(&ab->afl);
+	list_flush(&ab->pfl);
 	mem_deref(ab->lock);
 	mem_deref(ab->ajb);
 }
@@ -67,10 +82,10 @@ static void aubuf_destructor(void *arg)
 
 static void read_auframe(struct aubuf *ab, struct auframe *af)
 {
-	struct le *le = ab->afl.head;
-	size_t sample_size = aufmt_sample_size(af->fmt);
-	size_t sz = auframe_size(af);
-	uint8_t *p = af->sampv;
+	struct le *le  = ab->afl.head;
+	size_t sz      = auframe_size(af);
+	uint8_t *p     = af->sampv;
+	size_t samp_sz = aufmt_sample_size(af->fmt);
 
 	while (le) {
 		struct frame *f = le->data;
@@ -78,21 +93,23 @@ static void read_auframe(struct aubuf *ab, struct auframe *af)
 
 		le = le->next;
 
-		n = min(mbuf_get_left(f->mb), sz);
+		n = min(f->sz, sz);
 
 		(void)mbuf_read_mem(f->mb, p, n);
 		ab->cur_sz -= n;
+		f->sz -= n;
 
 		af->srate     = f->af.srate;
 		af->ch	      = f->af.ch;
 		af->timestamp = f->af.timestamp;
 
-		if (!mbuf_get_left(f->mb)) {
-			mem_deref(f);
+		if (!f->sz) {
+			list_unlink(&f->le_afl);
+			f->free = true;
 		}
-		else if (af->srate && af->ch && sample_size) {
+		else if (af->srate && af->ch && samp_sz) {
 			f->af.timestamp += n * AUDIO_TIMEBASE /
-				(af->srate * af->ch * sample_size);
+					   (af->srate * af->ch * samp_sz);
 		}
 
 		if (n == sz)
@@ -101,6 +118,23 @@ static void read_auframe(struct aubuf *ab, struct auframe *af)
 		p  += n;
 		sz -= n;
 	}
+}
+
+
+static inline struct frame *frame_alloc(struct aubuf *ab, size_t sz)
+{
+	struct frame *f = mem_zalloc(sizeof(*f), frame_destructor);
+	if (!f)
+		return NULL;
+
+	f->mb = mbuf_alloc(sz);
+	if (!f->mb)
+		return NULL;
+
+	f->free = true;
+	list_append(&ab->pfl, &f->le_pfl, f);
+
+	return f;
 }
 
 
@@ -132,6 +166,14 @@ int aubuf_alloc(struct aubuf **abp, size_t min_sz, size_t max_sz)
 	ab->wish_sz = min_sz;
 	ab->max_sz = max_sz;
 	ab->filling = true;
+
+	/* Preallocate a good size for startup. mbuf can resize if necessary
+	 * and aubuf_write_auframe() would append more frames if needed */
+	for (size_t i = 0; i < FRAMES; i++) {
+		struct frame *f = frame_alloc(ab, SAMPSZ);
+		if (!f)
+			return ENOMEM;
+	}
 
  out:
 	if (err)
@@ -211,26 +253,17 @@ static bool frame_less_equal(struct le *le1, struct le *le2, void *arg)
  *
  * @return 0 for success, otherwise error code
  */
-int aubuf_append_auframe(struct aubuf *ab, struct mbuf *mb, struct auframe *af)
+static int append_auframe(struct aubuf *ab, struct frame *f)
 {
-	struct frame *f;
 	size_t max_sz;
 
-	if (!ab || !mb)
+	if (!ab || !f)
 		return EINVAL;
-
-	f = mem_zalloc(sizeof(*f), frame_destructor);
-	if (!f)
-		return ENOMEM;
-
-	f->mb = mem_ref(mb);
-	if (af)
-		f->af = *af;
 
 	lock_write_get(ab->lock);
 
-	list_insert_sorted(&ab->afl, frame_less_equal, NULL, &f->le, f);
-	ab->cur_sz += mbuf_get_left(mb);
+	list_insert_sorted(&ab->afl, frame_less_equal, NULL, &f->le_afl, f);
+	ab->cur_sz += f->sz;
 
 	max_sz = ab->started ? ab->max_sz : ab->wish_sz + 1;
 	if (ab->max_sz && ab->cur_sz > max_sz) {
@@ -243,8 +276,9 @@ int aubuf_append_auframe(struct aubuf *ab, struct mbuf *mb, struct auframe *af)
 #endif
 		f = list_ledata(ab->afl.head);
 		if (f) {
-			ab->cur_sz -= mbuf_get_left(f->mb);
-			mem_deref(f);
+			ab->cur_sz -= f->sz;
+			list_unlink(&f->le_afl);
+			f->free = true;
 		}
 	}
 
@@ -267,32 +301,50 @@ int aubuf_append_auframe(struct aubuf *ab, struct mbuf *mb, struct auframe *af)
  */
 int aubuf_write_auframe(struct aubuf *ab, struct auframe *af)
 {
-	struct mbuf *mb;
+	struct frame *f = NULL;
 	size_t sz;
 	size_t sample_size;
+	struct le *le;
 	int err;
 
-	if (!ab || !af)
+	if (!ab || !af || !af->sampv)
 		return EINVAL;
+
 	sample_size = aufmt_sample_size(af->fmt);
 	if (sample_size)
 		sz = af->sampc * aufmt_sample_size(af->fmt);
 	else
 		sz = af->sampc;
 
-	mb = mbuf_alloc(sz);
+	if (!sz)
+		return EINVAL;
 
-	if (!mb)
-		return ENOMEM;
+	LIST_FOREACH(&ab->pfl, le)
+	{
+		struct frame *fp = le->data;
 
-	(void)mbuf_write_mem(mb, af->sampv, sz);
-	mb->pos = 0;
+		if (!fp->free)
+			continue;
 
-	err = aubuf_append_auframe(ab, mb, af);
+		f = fp;
+		break;
+	}
 
-	lock_write_get(ab->lock);
-	mem_deref(mb);
-	lock_rel(ab->lock);
+	if (!f) {
+		f = frame_alloc(ab, sz);
+		if (!f)
+			return ENOMEM;
+	}
+
+	f->free = false;
+	f->sz	= sz;
+	f->af	= *af;
+
+	f->mb->pos = 0;
+	(void)mbuf_write_mem(f->mb, af->sampv, f->sz);
+	f->mb->pos = 0;
+
+	err = append_auframe(ab, f);
 
 	if (!ab->filling && ab->ajb)
 		ajb_calc(ab->ajb, af, ab->cur_sz);

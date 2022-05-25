@@ -15,8 +15,6 @@ void aubuf_set_mode(struct aubuf *ab, enum aubuf_mode mode);
 void aubuf_set_silence(struct aubuf *ab, double silence);
 int  aubuf_resize(struct aubuf *ab, size_t min_sz, size_t max_sz);
 int  aubuf_write_auframe(struct aubuf *ab, struct auframe *af);
-int  aubuf_append_auframe(struct aubuf *ab, struct mbuf *mb,
-			  struct auframe *af);
 void aubuf_read_auframe(struct aubuf *ab, struct auframe *af);
 void aubuf_sort_auframe(struct aubuf *ab);
 int  aubuf_get(struct aubuf *ab, uint32_t ptime, uint8_t *p, size_t sz);
@@ -42,7 +40,14 @@ static inline int aubuf_write(struct aubuf *ab, const uint8_t *p, size_t sz)
 
 static inline int aubuf_append(struct aubuf *ab, struct mbuf *mb)
 {
-	return aubuf_append_auframe(ab, mb, NULL);
+	struct auframe af = {.fmt	= AUFMT_RAW,
+			     .srate	= 0,
+			     .sampv	= (uint8_t *)mb->buf,
+			     .sampc	= mbuf_get_left(mb),
+			     .timestamp = 0,
+			     .level	= AULEVEL_UNDEF};
+
+	return aubuf_write_auframe(ab, &af);
 }
 
 
