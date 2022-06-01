@@ -11,7 +11,9 @@
 
 cmake_minimum_required(VERSION 3.7)
 
-project(rem VERSION 2.3.0 LANGUAGES C)
+project(rem VERSION 2.4.0 LANGUAGES C)
+
+set(PROJECT_SOVERSION 3) # bump if ABI breaks
 
 ##############################################################################
 #
@@ -92,3 +94,4 @@ add_library(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME} re -lpthread -lm)
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_SOVERSION})
