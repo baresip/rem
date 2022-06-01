@@ -6,7 +6,7 @@
 
 # Main version number
 VER_MAJOR := 2
-VER_MINOR := 3
+VER_MINOR := 4
 VER_PATCH := 0
 
 # Development version, comment out on a release
@@ -15,11 +15,9 @@ VER_PATCH := 0
 
 # Libtool similar ABI versioning
 # https://github.com/baresip/re/wiki/ABI-Versioning
-ABI_CUR   := 2
-ABI_REV   := 0
-ABI_AGE   := 0
-
-ABI_MAJOR := $(shell expr $(ABI_CUR) - $(ABI_AGE))
+ABI_MAJOR := 3
+ABI_AGE   := $(VER_MINOR)
+ABI_REV   := $(VER_PATCH)
 
 PROJECT   := rem
 ifeq ($(VER_PRE),)
@@ -28,7 +26,7 @@ else
 VERSION   := $(VER_MAJOR).$(VER_MINOR).$(VER_PATCH)-$(VER_PRE)
 endif
 OPT_SPEED := 1
-LIBRE_MIN := 2.1.1
+LIBRE_MIN := 2.4.0
 
 ifndef LIBRE_MK
 LIBRE_MK  := $(shell [ -f ../re/mk/re.mk ] && \
