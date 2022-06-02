@@ -271,6 +271,7 @@ int aubuf_write_auframe(struct aubuf *ab, const struct auframe *af)
 	struct mbuf *mb;
 	size_t sz;
 	size_t sample_size;
+	bool ajb;
 	int err;
 
 	if (!ab || !af)
@@ -293,9 +294,10 @@ int aubuf_write_auframe(struct aubuf *ab, const struct auframe *af)
 
 	lock_write_get(ab->lock);
 	mem_deref(mb);
+	ajb = !ab->filling && ab->ajb;
 	lock_rel(ab->lock);
 
-	if (!ab->filling && ab->ajb)
+	if (ajb)
 		ajb_calc(ab->ajb, af, ab->cur_sz);
 
 	return err;
