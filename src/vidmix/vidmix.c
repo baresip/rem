@@ -18,7 +18,7 @@
 
 
 struct vidmix {
-	struct lock *rwlock;
+	mtx_t rwlock;
 	struct list srcl;
 	bool initialized;
 };
@@ -71,7 +71,7 @@ static void destructor(void *arg)
 	struct vidmix *mix = arg;
 
 	if (mix->initialized)
-		mix->rwlock = mem_deref(mix->rwlock);
+		mtx_destroy(&mix->rwlock);
 }
 
 
@@ -82,10 +82,10 @@ static void source_destructor(void *arg)
 	vidmix_source_stop(src);
 
 	if (src->le.list) {
-		lock_write_get(src->mix->rwlock);
+		mtx_lock(&src->mix->rwlock);
 		list_unlink(&src->le);
 		clear_all(src->mix);
-		lock_rel(src->mix->rwlock);
+		mtx_unlock(&src->mix->rwlock);
 	}
 
 	mem_deref(src->frame_tx);
@@ -210,7 +210,7 @@ static int vidmix_thread(void *arg)
 			continue;
 		}
 
-		lock_read_get(mix->rwlock);
+		mtx_lock(&mix->rwlock);
 
 		if (src->clear) {
 			clear_frame(src->frame_tx);
@@ -256,7 +256,7 @@ static int vidmix_thread(void *arg)
 				++idx;
 		}
 
-		lock_rel(mix->rwlock);
+		mtx_unlock(&mix->rwlock);
 
 		src->fh((uint32_t)ts * 90, src->frame_tx, src->arg);
 
@@ -291,7 +291,7 @@ static int content_thread(void *arg)
 		if (ts > now)
 			continue;
 
-		lock_read_get(mix->rwlock);
+		mtx_lock(&mix->rwlock);
 
 		for (le=mix->srcl.head; le; le=le->next) {
 
@@ -304,7 +304,7 @@ static int content_thread(void *arg)
 			break;
 		}
 
-		lock_rel(mix->rwlock);
+		mtx_unlock(&mix->rwlock);
 
 		ts += src->fint;
 	}
@@ -334,7 +334,7 @@ int vidmix_alloc(struct vidmix **mixp)
 	if (!mix)
 		return ENOMEM;
 
-	err = lock_alloc(&mix->rwlock);
+	err = mtx_init(&mix->rwlock, mtx_plain);
 	if (err)
 		goto out;
 
@@ -461,7 +461,7 @@ void vidmix_source_enable(struct vidmix_source *src, bool enable)
 	if (!src->le.list && !enable)
 		return;
 
-	lock_write_get(src->mix->rwlock);
+	mtx_lock(&src->mix->rwlock);
 
 	if (enable) {
 		if (src->frame_rx)
@@ -475,7 +475,7 @@ void vidmix_source_enable(struct vidmix_source *src, bool enable)
 
 	clear_all(src->mix);
 
-	lock_rel(src->mix->rwlock);
+	mtx_unlock(&src->mix->rwlock);
 }
 
 
@@ -655,7 +655,7 @@ void vidmix_source_set_focus_idx(struct vidmix_source *src, unsigned pidx)
 		struct le *le;
 		unsigned i;
 
-		lock_read_get(src->mix->rwlock);
+		mtx_lock(&src->mix->rwlock);
 
 		for (le=src->mix->srcl.head, i=1; le; le=le->next) {
 
@@ -673,7 +673,7 @@ void vidmix_source_set_focus_idx(struct vidmix_source *src, unsigned pidx)
 			}
 		}
 
-		lock_rel(src->mix->rwlock);
+		mtx_unlock(&src->mix->rwlock);
 	}
 
 	if (focus && focus == src->focus)
@@ -707,17 +707,17 @@ void vidmix_source_put(struct vidmix_source *src, const struct vidframe *frame)
 		if (err)
 			return;
 
-		lock_write_get(src->mix->rwlock);
+		mtx_lock(&src->mix->rwlock);
 
 		mem_deref(src->frame_rx);
 		src->frame_rx = frm;
 
 		clear_all(src->mix);
 
-		lock_rel(src->mix->rwlock);
+		mtx_unlock(&src->mix->rwlock);
 	}
 
-	lock_write_get(src->mix->rwlock);
+	mtx_lock(&src->mix->rwlock);
 	vidframe_copy(src->frame_rx, frame);
-	lock_rel(src->mix->rwlock);
+	mtx_unlock(&src->mix->rwlock);
 }
