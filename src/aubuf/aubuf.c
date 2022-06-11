@@ -19,7 +19,7 @@
 /** Locked audio-buffer with almost zero-copy */
 struct aubuf {
 	struct list afl;
-	struct lock *lock;
+	mtx_t *lock;
 	size_t wish_sz;
 	size_t cur_sz;
 	size_t max_sz;
@@ -125,7 +125,7 @@ int aubuf_alloc(struct aubuf **abp, size_t min_sz, size_t max_sz)
 	if (!ab)
 		return ENOMEM;
 
-	err = lock_alloc(&ab->lock);
+	err = mtx_alloc(&ab->lock);
 	if (err)
 		goto out;
 
@@ -181,10 +181,10 @@ int aubuf_resize(struct aubuf *ab, size_t min_sz, size_t max_sz)
 	if (!ab || !min_sz)
 		return EINVAL;
 
-	lock_write_get(ab->lock);
+	mtx_lock(ab->lock);
 	ab->wish_sz = min_sz;
 	ab->max_sz  = max_sz;
-	lock_rel(ab->lock);
+	mtx_unlock(ab->lock);
 
 	aubuf_flush(ab);
 
@@ -228,7 +228,7 @@ int aubuf_append_auframe(struct aubuf *ab, struct mbuf *mb,
 	if (af)
 		f->af = *af;
 
-	lock_write_get(ab->lock);
+	mtx_lock(ab->lock);
 
 	list_insert_sorted(&ab->afl, frame_less_equal, NULL, &f->le, f);
 	ab->cur_sz += mbuf_get_left(mb);
@@ -252,7 +252,7 @@ int aubuf_append_auframe(struct aubuf *ab, struct mbuf *mb,
 	if (ab->filling && ab->cur_sz >= ab->wish_sz)
 		ab->filling = false;
 
-	lock_rel(ab->lock);
+	mtx_unlock(ab->lock);
 
 	return 0;
 }
@@ -292,10 +292,10 @@ int aubuf_write_auframe(struct aubuf *ab, const struct auframe *af)
 
 	err = aubuf_append_auframe(ab, mb, af);
 
-	lock_write_get(ab->lock);
+	mtx_lock(ab->lock);
 	mem_deref(mb);
 	ajb = !ab->filling && ab->ajb;
-	lock_rel(ab->lock);
+	mtx_unlock(ab->lock);
 
 	if (ajb)
 		ajb_calc(ab->ajb, af, ab->cur_sz);
@@ -323,7 +323,7 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 	if (!ab->ajb && ab->mode == AUBUF_ADAPTIVE)
 		ab->ajb = ajb_alloc(ab->silence);
 
-	lock_write_get(ab->lock);
+	mtx_lock(ab->lock);
 	as = ajb_get(ab->ajb, af);
 	if (as == AJB_LOW) {
 #if AUBUF_DEBUG
@@ -364,7 +364,7 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 	}
 
  out:
-	lock_rel(ab->lock);
+	mtx_unlock(ab->lock);
 }
 
 
@@ -390,7 +390,7 @@ int aubuf_get(struct aubuf *ab, uint32_t ptime, uint8_t *p, size_t sz)
 	if (!ab || !ptime)
 		return EINVAL;
 
-	lock_write_get(ab->lock);
+	mtx_lock(ab->lock);
 
 	now = tmr_jiffies();
 	if (!ab->ts)
@@ -404,7 +404,7 @@ int aubuf_get(struct aubuf *ab, uint32_t ptime, uint8_t *p, size_t sz)
 	ab->ts += ptime;
 
  out:
-	lock_rel(ab->lock);
+	mtx_unlock(ab->lock);
 
 	if (!err)
 		aubuf_read(ab, p, sz);
@@ -423,14 +423,14 @@ void aubuf_flush(struct aubuf *ab)
 	if (!ab)
 		return;
 
-	lock_write_get(ab->lock);
+	mtx_lock(ab->lock);
 
 	list_flush(&ab->afl);
 	ab->filling = true;
 	ab->cur_sz  = 0;
 	ab->ts      = 0;
 
-	lock_rel(ab->lock);
+	mtx_unlock(ab->lock);
 	ajb_reset(ab->ajb);
 }
 
@@ -450,7 +450,7 @@ int aubuf_debug(struct re_printf *pf, const struct aubuf *ab)
 	if (!ab)
 		return 0;
 
-	lock_read_get(ab->lock);
+	mtx_lock(ab->lock);
 	err = re_hprintf(pf, "wish_sz=%zu cur_sz=%zu filling=%d",
 			 ab->wish_sz, ab->cur_sz, ab->filling);
 
@@ -459,7 +459,7 @@ int aubuf_debug(struct re_printf *pf, const struct aubuf *ab)
 			  ab->stats.or, ab->stats.ur);
 #endif
 
-	lock_rel(ab->lock);
+	mtx_unlock(ab->lock);
 
 	return err;
 }
@@ -479,9 +479,9 @@ size_t aubuf_cur_size(const struct aubuf *ab)
 	if (!ab)
 		return 0;
 
-	lock_read_get(ab->lock);
+	mtx_lock(ab->lock);
 	sz = ab->cur_sz;
-	lock_rel(ab->lock);
+	mtx_unlock(ab->lock);
 
 	return sz;
 }
