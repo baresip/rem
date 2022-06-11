@@ -131,7 +131,9 @@ void plot_underrun(struct ajb *ajb)
 /**
  * Initializes the adaptive jitter buffer statistics
  *
- * @param ajb    Adaptive jitter buffer statistics
+ * @param silence Silence audio level
+ *
+ * @return ajb    Adaptive jitter buffer statistics
  */
 struct ajb *ajb_alloc(double silence)
 {

@@ -10,9 +10,9 @@ struct aumix_source;
 /**
  * Audio mixer frame handler
  *
- * @param buf Buffer with audio samples
- * @param sz  Number of bytes
- * @param arg Handler argument
+ * @param sampv Buffer with audio samples
+ * @param sampc Number of samples
+ * @param arg   Handler argument
  */
 typedef void (aumix_frame_h)(const int16_t *sampv, size_t sampc, void *arg);
 

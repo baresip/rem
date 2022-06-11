@@ -1,5 +1,5 @@
 /**
- * @file src/aulevel.c  Audio level
+ * @file aulevel/aulevel.c  Audio level
  *
  * Copyright (C) 2017 Creytiv.com
  */
