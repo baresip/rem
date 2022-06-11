@@ -32,7 +32,7 @@ enum {
 /** Adaptive jitter buffer statistics */
 struct ajb {
 	int32_t jitter;      /**< Jitter in [us]                  */
-	struct lock *lock;
+	mtx_t *lock;
 
 	uint64_t ts0;        /**< previous timestamp              */
 	uint64_t tr0;        /**< previous time of arrival        */
@@ -144,7 +144,7 @@ struct ajb *ajb_alloc(double silence)
 	if (!ajb)
 		return NULL;
 
-	err = lock_alloc(&ajb->lock);
+	err = mtx_alloc(&ajb->lock);
 	if (err)
 		goto out;
 
@@ -169,14 +169,14 @@ void ajb_reset(struct ajb *ajb)
 	if (!ajb)
 		return;
 
-	lock_write_get(ajb->lock);
+	mtx_lock(ajb->lock);
 	ajb->ts0 = 0;
 	ajb->tr0 = 0;
 
 	/* We start with wish size. */
 	ajb->started = false;
 	ajb->as = AJB_GOOD;
-	lock_rel(ajb->lock);
+	mtx_unlock(ajb->lock);
 }
 
 
@@ -201,7 +201,7 @@ void ajb_calc(struct ajb *ajb, const struct auframe *af, size_t cur_sz)
 	if (!ajb || !af || !af->srate)
 		return;
 
-	lock_write_get(ajb->lock);
+	mtx_lock(ajb->lock);
 	sz = aufmt_sample_size(af->fmt);
 	ts = (int64_t) af->timestamp;
 	tr = tmr_jiffies_usec();
@@ -263,7 +263,7 @@ void ajb_calc(struct ajb *ajb, const struct auframe *af, size_t cur_sz)
 out:
 	ajb->ts0 = ts;
 	ajb->tr0 = tr;
-	lock_rel(ajb->lock);
+	mtx_unlock(ajb->lock);
 }
 
 
@@ -279,9 +279,9 @@ void ajb_drop(struct ajb *ajb, const struct auframe *af)
 	if (!ajb || !af)
 		return;
 
-	lock_write_get(ajb->lock);
+	mtx_lock(ajb->lock);
 	ajb->ts0 = af->timestamp;
-	lock_rel(ajb->lock);
+	mtx_unlock(ajb->lock);
 }
 
 
@@ -292,7 +292,7 @@ enum ajb_state ajb_get(struct ajb *ajb, struct auframe *af)
 	if (!ajb || !af || !af->srate || !af->sampc)
 		return AJB_GOOD;
 
-	lock_write_get(ajb->lock);
+	mtx_lock(ajb->lock);
 	ajb->af = *af;
 
 	/* ptime in [us] */
@@ -327,7 +327,7 @@ enum ajb_state ajb_get(struct ajb *ajb, struct auframe *af)
 	}
 
 out:
-	lock_rel(ajb->lock);
+	mtx_unlock(ajb->lock);
 	return as;
 }
 
@@ -339,9 +339,9 @@ int32_t ajb_debug(const struct ajb *ajb)
 	if (!ajb)
 		return 0;
 
-	lock_write_get(ajb->lock);
+	mtx_lock(ajb->lock);
 	jitter = ajb->jitter;
-	lock_rel(ajb->lock);
+	mtx_unlock(ajb->lock);
 	re_printf("  ajb jitter: %d, ajb avbuftime: %d\n", jitter / 1000,
 		  ajb->avbuftime);
 
