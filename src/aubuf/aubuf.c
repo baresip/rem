@@ -344,7 +344,7 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 		}
 #endif
 		if (!ab->filling)
-			ajb_reset(ab->ajb);
+			ajb_set_ts0(ab->ajb, 0);
 
 		filling = ab->filling;
 		ab->filling = true;
@@ -501,10 +501,18 @@ void aubuf_sort_auframe(struct aubuf *ab)
 }
 
 
+/**
+ * This function is for reporting that the given audio frame was dropped. Its
+ * timestamp is used to reset the ajb structure to avoid a jump of the computed
+ * jitter value
+ *
+ * @param ab Audio buffer
+ * @param af Audio frame
+ */
 void aubuf_drop_auframe(struct aubuf *ab, const struct auframe *af)
 {
 	if (!ab)
 		return;
 
-	ajb_drop(ab->ajb, af);
+	ajb_set_ts0(ab->ajb, af->timestamp);
 }

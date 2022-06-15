@@ -267,20 +267,14 @@ out:
 }
 
 
-/**
- * This function is for reporting that the given audio frame is not appended.
- * Instead the timestamp is stored in `ts0` to avoid a jump of the computed
- * jitter value.
- * @param ajb     Adaptive jitter buffer statistics
- * @param af      Audio frame
- */
-void ajb_drop(struct ajb *ajb, const struct auframe *af)
+void ajb_set_ts0(struct ajb *ajb, uint64_t timestamp)
 {
-	if (!ajb || !af)
+	if (!ajb)
 		return;
 
 	mtx_lock(ajb->lock);
-	ajb->ts0 = af->timestamp;
+	ajb->ts0 = timestamp;
+	ajb->tr0 = tmr_jiffies_usec();
 	mtx_unlock(ajb->lock);
 }
 
