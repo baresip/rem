@@ -57,7 +57,7 @@
 # Choose your preferred gnuplot terminal or use e.g. evince to view the
 # ajb.eps!
 
-#set terminal x11
+#set terminal qt persist
 set terminal postscript eps size 15,10 enhanced color
 set output 'ajb.eps'
 #set terminal png size 1280,480
