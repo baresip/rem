@@ -16,7 +16,7 @@ function init_jitter () {
 
 function enable_jitter() {
     echo "ENABLE JITTER ..."
-    sudo tc qdisc add dev ifb1 root netem delay 200ms 100ms
+    sudo tc qdisc add dev ifb1 root netem delay 0ms 150ms
 }
 
 
@@ -47,11 +47,11 @@ i=1
 for ptime in 20 10 5 15 30 40; do
 
     sed -e "s/ptime=[0-9]*/ptime=$ptime/" -i accounts
-    for buf in $ptime $(( 2*ptime )) $(( 3*ptime )) $(( 4*ptime )) $(( 6*ptime )); do
+    for buf in $(( ptime + ptime/2 )) $(( ptime )) $(( 2*ptime )) $(( 4*ptime )) $(( 6*ptime )); do
         echo "########### ptime $ptime buffer $buf ###############"
 
         sed -e "s/audio_buffer\s*[0-9]*\-.*/audio_buffer   $buf-250/" -i config
-        baresip -f . > /tmp/b.log 2>&1 &
+        baresip -v -f . > /tmp/b.log 2>&1 &
         sleep 1
         echo "/dial $target" | nc -N localhost 5555
 

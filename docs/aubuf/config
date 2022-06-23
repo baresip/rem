@@ -1,9 +1,9 @@
 #audio_path		/usr/local/share/baresip
-audio_player		pulse,
-audio_source		pulse,
-audio_alert		pulse,
+audio_player		pulse_async,
+audio_source		pulse_async,
+audio_alert		pulse_async,
 audio_level		no
-audio_buffer   20-250
+audio_buffer   30-250
 audio_buffer_mode	adaptive
 audio_silence		0.0
 
