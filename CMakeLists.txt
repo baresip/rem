@@ -11,7 +11,7 @@
 
 cmake_minimum_required(VERSION 3.7)
 
-project(rem VERSION 2.4.0 LANGUAGES C)
+project(rem VERSION 2.5.0 LANGUAGES C)
 
 set(PROJECT_SOVERSION 3) # bump if ABI breaks
 

@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [v2.5.0] - 2022-07-01
+
+## What's Changed
+* ci/build: fix macOS openssl path by @sreimers in https://github.com/baresip/rem/pull/59
+* vidmix: use C11 mutex by @alfredh in https://github.com/baresip/rem/pull/58
+* aubuf: fix possible data race warning by @cspiel1 in https://github.com/baresip/rem/pull/61
+* aubuf: C11 mutex by @alfredh in https://github.com/baresip/rem/pull/62
+* ajb: C11 mutex by @alfredh in https://github.com/baresip/rem/pull/63
+* aubuf: correct ajb reset on frame drop and on underruns by @cspiel1 in https://github.com/baresip/rem/pull/64
+* aubuf: better support for different put/get ptime by @cspiel1 in https://github.com/baresip/rem/pull/65
+
+---
+
 ## [v2.4.0] - 2022-06-01
 
 ### What's Changed
