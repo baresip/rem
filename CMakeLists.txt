@@ -61,7 +61,7 @@ include_directories(
 link_directories(/usr/local/lib)
 add_definitions(-DVERSION="${PROJECT_VERSION}")
 
-add_library(${PROJECT_NAME}
+set(SRCS
   src/aac/aac.c
   src/au/fmt.c
   src/au/util.c
@@ -87,6 +87,37 @@ add_library(${PROJECT_NAME}
   src/vidmix/vidmix.c
 )
 
+set(HEADERS
+  include/rem_aac.h
+  include/rem_aubuf.h
+  include/rem_auconv.h
+  include/rem_audio.h
+  include/rem_aufile.h
+  include/rem_auframe.h
+  include/rem_au.h
+  include/rem_aulevel.h
+  include/rem_aumix.h
+  include/rem_auresamp.h
+  include/rem_autone.h
+  include/rem_avc.h
+  include/rem_dsp.h
+  include/rem_dtmf.h
+  include/rem_fir.h
+  include/rem_flv.h
+  include/rem_g711.h
+  include/rem_goertzel.h
+  include/rem.h
+  include/rem_vidconv.h
+  include/rem_video.h
+  include/rem_vid.h
+  include/rem_vidmix.h
+)
+
+add_library(${PROJECT_NAME}
+  ${SRCS}
+  ${HEADERS}
+)
+
 ##############################################################################
 #
 # Main target object
@@ -95,3 +126,6 @@ add_library(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} re -lpthread -lm)
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_SOVERSION})
+
+set_target_properties(rem PROPERTIES PUBLIC_HEADER "${HEADERS}")
+install(TARGETS rem LIBRARY)
