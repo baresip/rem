@@ -95,3 +95,7 @@ add_library(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} re -lpthread -lm)
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_SOVERSION})
+
+file(GLOB_RECURSE HEADERS include/*.h)
+set_target_properties(rem PROPERTIES PUBLIC_HEADER "${HEADERS}")
+install(TARGETS rem LIBRARY)
