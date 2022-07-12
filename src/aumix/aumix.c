@@ -224,16 +224,20 @@ int aumix_alloc(struct aumix **mixp, uint32_t srate,
 	mix->ch         = ch;
 
 	err = mtx_init(&mix->mutex, mtx_plain);
-	if (err)
+	if (err != thrd_success) {
+		err = ENOMEM;
 		goto out;
+	}
 
 	err = cnd_init(&mix->cond);
-	if (err)
+	if (err != thrd_success) {
+		err = ENOMEM;
 		goto out;
+	}
 
 	mix->run = true;
 
-	err = thrd_create(&mix->thread, aumix_thread, mix);
+	err = thread_create_name(&mix->thread, "aumix", aumix_thread, mix);
 	if (err) {
 		mix->run = false;
 		goto out;

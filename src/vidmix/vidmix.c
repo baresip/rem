@@ -335,8 +335,10 @@ int vidmix_alloc(struct vidmix **mixp)
 		return ENOMEM;
 
 	err = mtx_init(&mix->rwlock, mtx_plain);
-	if (err)
+	if (err != thrd_success) {
+		err = ENOMEM;
 		goto out;
+	}
 
 	mix->initialized = true;
 
@@ -384,8 +386,10 @@ int vidmix_source_alloc(struct vidmix_source **srcp, struct vidmix *mix,
 	src->arg     = arg;
 
 	err = mtx_init(&src->mutex, mtx_plain);
-	if (err)
+	if (err != thrd_success) {
+		err = ENOMEM;
 		goto out;
+	}
 
 	if (sz) {
 		err = vidframe_alloc(&src->frame_tx, VID_FMT_YUV420P, sz);
@@ -498,12 +502,11 @@ int vidmix_source_start(struct vidmix_source *src)
 
 	src->run = true;
 
-	err = thrd_create(&src->thread,
-			     src->content ? content_thread : vidmix_thread,
-			     src);
-	if (err) {
+	err = thread_create_name(&src->thread, "vidmix",
+				 src->content ? content_thread : vidmix_thread,
+				 src);
+	if (err)
 		src->run = false;
-	}
 
 	return err;
 }
