@@ -144,7 +144,7 @@ struct ajb *ajb_alloc(double silence)
 	if (!ajb)
 		return NULL;
 
-	err = mtx_alloc(&ajb->lock);
+	err = mutex_alloc(&ajb->lock);
 	if (err)
 		goto out;
 
