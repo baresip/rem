@@ -125,7 +125,7 @@ int aubuf_alloc(struct aubuf **abp, size_t min_sz, size_t max_sz)
 	if (!ab)
 		return ENOMEM;
 
-	err = mtx_alloc(&ab->lock);
+	err = mutex_alloc(&ab->lock);
 	if (err)
 		goto out;
 
