@@ -14,7 +14,7 @@ enum ajb_state {
 
 struct ajb;
 
-struct ajb *ajb_alloc(double silence);
+struct ajb *ajb_alloc(double silence, size_t wish_sz);
 void ajb_reset(struct ajb *ajb);
 void ajb_calc(struct ajb *ajb, const struct auframe *af, size_t sampc);
 enum ajb_state ajb_get(struct ajb *ajb, struct auframe *af);

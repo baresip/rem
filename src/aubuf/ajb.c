@@ -54,7 +54,7 @@ struct ajb {
 
 	int32_t avbuftime;   /**< average buffered time [us]      */
 	bool started;        /**< Started flag                    */
-	uint32_t bufmin;     /**< Minimum buffer time [us]        */
+	size_t wish_sz;      /**< Wish size of buffer [Bytes]     */
 	struct auframe af;   /**< Audio frame of last ajb_get()   */
 	uint32_t dropped;    /**< Dropped audio frames counter    */
 	double silence;      /**< Silence audio level             */
@@ -135,7 +135,7 @@ void plot_underrun(struct ajb *ajb)
  *
  * @return ajb    Adaptive jitter buffer statistics
  */
-struct ajb *ajb_alloc(double silence)
+struct ajb *ajb_alloc(double silence, size_t wish_sz)
 {
 	struct ajb *ajb;
 	int err;
@@ -152,6 +152,7 @@ struct ajb *ajb_alloc(double silence)
 	ajb->tr0 = 0;
 	ajb->as = AJB_GOOD;
 	ajb->silence = silence;
+	ajb->wish_sz = wish_sz;
 #if DEBUG_LEVEL >= 6
 	(void)re_trace_init("ajb.json");
 #endif
@@ -192,19 +193,19 @@ void ajb_calc(struct ajb *ajb, const struct auframe *af, size_t cur_sz)
 {
 	uint64_t tr;                       /**< Real time in [us]            */
 	uint32_t buftime, bufmax, bufmin;  /**< Buffer time in [us]          */
+	uint32_t bufwish;                  /**< Buffer wish time in [us]     */
 	int32_t d;                         /**< Time shift in [us]           */
 	int32_t da;                        /**< Absolut time shift in [us]   */
 	int32_t s;                         /**< EMA coefficient              */
 	uint64_t ts;                       /**< Time stamp                   */
 	uint64_t ds;                       /**< Time stamp duration          */
 	uint32_t ptime;                    /**< Packet time [us]             */
-	size_t sz;
+	size_t szdiv;
 
 	if (!ajb || !af || !af->srate)
 		return;
 
 	mtx_lock(ajb->lock);
-	sz = aufmt_sample_size(af->fmt);
 	ts = af->timestamp;
 	tr = tmr_jiffies_usec();
 	if (!ajb->ts0)
@@ -214,8 +215,9 @@ void ajb_calc(struct ajb *ajb, const struct auframe *af, size_t cur_sz)
 	d = (int32_t) (int64_t) ( (tr - ajb->tr0) - ds );
 	da = abs(d);
 
-	buftime = (uint32_t) (cur_sz * 1000 /
-			      (af->srate * af->ch *  sz / 1000));
+	szdiv = af->srate * af->ch *  aufmt_sample_size(af->fmt) / 1000;
+	buftime = (uint32_t) (cur_sz * 1000 / szdiv);
+	bufwish = (uint32_t) (ajb->wish_sz * 1000 / szdiv);
 	if (ajb->started) {
 		ajb->avbuftime += ((int32_t) buftime - ajb->avbuftime) /
 				  BUFTIME_EMA_COEFF;
@@ -242,8 +244,8 @@ void ajb_calc(struct ajb *ajb, const struct auframe *af, size_t cur_sz)
 
 	ptime = (uint32_t) (af->sampc * AUDIO_TIMEBASE / (af->srate * af->ch));
 	bufmin = MAX(bufmin, ptime * 2 / 3);
+	bufmin = MAX(bufmin, bufwish - ptime / 3);
 	bufmax = MAX(bufmax, bufmin + 7 * ptime / 6);
-	ajb->bufmin = bufmin;
 
 	/* reset time base if a frame is missing */
 	if (ts - ajb->ts > ptime)
