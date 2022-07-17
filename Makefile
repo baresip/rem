@@ -6,7 +6,7 @@
 
 # Main version number
 VER_MAJOR := 2
-VER_MINOR := 5
+VER_MINOR := 6
 VER_PATCH := 0
 
 # Development version, comment out on a release
@@ -26,7 +26,7 @@ else
 VERSION   := $(VER_MAJOR).$(VER_MINOR).$(VER_PATCH)-$(VER_PRE)
 endif
 OPT_SPEED := 1
-LIBRE_MIN := 2.5.0
+LIBRE_MIN := 2.6.0
 
 ifndef LIBRE_MK
 LIBRE_MK  := $(shell [ -f ../re/mk/re.mk ] && \
