@@ -244,7 +244,9 @@ void ajb_calc(struct ajb *ajb, const struct auframe *af, size_t cur_sz)
 
 	ptime = (uint32_t) (af->sampc * AUDIO_TIMEBASE / (af->srate * af->ch));
 	bufmin = MAX(bufmin, ptime * 2 / 3);
-	bufmin = MAX(bufmin, bufwish - ptime / 3);
+	if (bufwish >= ptime)
+		bufmin = MAX(bufmin, bufwish - ptime / 3);
+
 	bufmax = MAX(bufmax, bufmin + 7 * ptime / 6);
 
 	/* reset time base if a frame is missing */
