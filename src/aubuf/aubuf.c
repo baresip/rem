@@ -23,7 +23,7 @@ struct aubuf {
 	size_t cur_sz;
 	size_t max_sz;
 	size_t fill_sz;         /**< To fill size                            */
-	size_t pkt_sz;        /**< Packet size                             */
+	size_t pkt_sz;          /**< Packet size                             */
 	bool started;
 	uint64_t ts;
 
@@ -118,7 +118,7 @@ int aubuf_alloc(struct aubuf **abp, size_t min_sz, size_t max_sz)
 	struct aubuf *ab;
 	int err;
 
-	if (!abp || !min_sz)
+	if (!abp)
 		return EINVAL;
 
 	ab = mem_zalloc(sizeof(*ab), aubuf_destructor);
@@ -178,7 +178,7 @@ void aubuf_set_silence(struct aubuf *ab, double silence)
  */
 int aubuf_resize(struct aubuf *ab, size_t min_sz, size_t max_sz)
 {
-	if (!ab || !min_sz)
+	if (!ab)
 		return EINVAL;
 
 	mtx_lock(ab->lock);
@@ -240,11 +240,9 @@ int aubuf_append_auframe(struct aubuf *ab, struct mbuf *mb,
 
 	if (ab->max_sz && ab->cur_sz > ab->max_sz) {
 #if AUBUF_DEBUG
-		if (ab->started) {
-			++ab->stats.or;
-			(void)re_printf("aubuf: %p overrun (cur=%zu/%zu)\n",
-					ab, ab->cur_sz, ab->max_sz);
-		}
+		++ab->stats.or;
+		(void)re_printf("aubuf: %p overrun (cur=%zu/%zu)\n",
+				ab, ab->cur_sz, ab->max_sz);
 #endif
 		f = list_ledata(ab->afl.head);
 		if (f) {
