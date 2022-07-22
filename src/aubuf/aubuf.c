@@ -215,7 +215,6 @@ int aubuf_append_auframe(struct aubuf *ab, struct mbuf *mb,
 			 const struct auframe *af)
 {
 	struct frame *f;
-	size_t max_sz;
 	size_t sz;
 
 	if (!ab || !mb)
@@ -239,8 +238,7 @@ int aubuf_append_auframe(struct aubuf *ab, struct mbuf *mb,
 	list_insert_sorted(&ab->afl, frame_less_equal, NULL, &f->le, f);
 	ab->cur_sz += sz;
 
-	max_sz = ab->started ? ab->max_sz : ab->wish_sz;
-	if (ab->max_sz && ab->cur_sz > max_sz) {
+	if (ab->max_sz && ab->cur_sz > ab->max_sz) {
 #if AUBUF_DEBUG
 		if (ab->started) {
 			++ab->stats.or;
@@ -358,6 +356,16 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 			ab->fill_sz = ab->wish_sz;
 	}
 
+	/* on first read drop old frames */
+	while (!ab->started && ab->wish_sz && ab->cur_sz > ab->wish_sz) {
+		struct frame *f = list_ledata(ab->afl.head);
+		if (f) {
+			ab->cur_sz -= mbuf_get_left(f->mb);
+			mem_deref(f);
+		}
+	}
+
+	ab->started = true;
 	read_auframe(ab, af);
 	if (as == AJB_HIGH) {
 #if AUBUF_DEBUG
@@ -376,7 +384,6 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 			ab->fill_sz = 0;
 	}
 
-	ab->started = true;
 	mtx_unlock(ab->lock);
 }
 
