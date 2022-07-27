@@ -24,6 +24,7 @@ struct aubuf {
 	size_t max_sz;
 	size_t fill_sz;         /**< To fill size                            */
 	size_t pkt_sz;          /**< Packet size                             */
+	size_t written_sz;      /**< Written size                            */
 	bool started;
 	uint64_t ts;
 
@@ -65,6 +66,14 @@ static void aubuf_destructor(void *arg)
 }
 
 
+static size_t auframe_bytes_to_timestamp(const struct auframe *af, size_t n)
+{
+	size_t sample_size = aufmt_sample_size(af->fmt);
+
+	return n * AUDIO_TIMEBASE / (af->srate * af->ch * sample_size);
+}
+
+
 static void read_auframe(struct aubuf *ab, struct auframe *af)
 {
 	struct le *le = ab->afl.head;
@@ -90,11 +99,10 @@ static void read_auframe(struct aubuf *ab, struct auframe *af)
 		if (!mbuf_get_left(f->mb)) {
 			mem_deref(f);
 		}
-		else if (f->af.timestamp && af->srate && af->ch &&
-			 sample_size) {
+		else if (af->srate && af->ch && sample_size) {
 
-			f->af.timestamp += n * AUDIO_TIMEBASE /
-				(af->srate * af->ch * sample_size);
+			f->af.timestamp +=
+				auframe_bytes_to_timestamp(&f->af, n);
 		}
 
 		if (n == sz)
@@ -237,8 +245,14 @@ int aubuf_append_auframe(struct aubuf *ab, struct mbuf *mb,
 	if (ab->fill_sz >= ab->pkt_sz)
 		ab->fill_sz -= ab->pkt_sz;
 
+	if (!f->af.timestamp && f->af.srate && f->af.ch) {
+		f->af.timestamp =
+			auframe_bytes_to_timestamp(&f->af, ab->written_sz);
+	}
+
 	list_insert_sorted(&ab->afl, frame_less_equal, NULL, &f->le, f);
 	ab->cur_sz += sz;
+	ab->written_sz += sz;
 
 	if (ab->max_sz && ab->cur_sz > ab->max_sz) {
 #if AUBUF_DEBUG
