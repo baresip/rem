@@ -24,7 +24,7 @@ struct aubuf {
 	size_t max_sz;
 	size_t fill_sz;         /**< To fill size                            */
 	size_t pkt_sz;          /**< Packet size                             */
-	size_t written_sz;      /**< Written size                            */
+	size_t wr_sz;           /**< Written size                            */
 	bool started;
 	uint64_t ts;
 
@@ -239,12 +239,12 @@ int aubuf_append_auframe(struct aubuf *ab, struct mbuf *mb,
 
 	if (!f->af.timestamp && f->af.srate && f->af.ch) {
 		f->af.timestamp =
-			auframe_bytes_to_timestamp(&f->af, ab->written_sz);
+			auframe_bytes_to_timestamp(&f->af, ab->wr_sz);
 	}
 
 	list_insert_sorted(&ab->afl, frame_less_equal, NULL, &f->le, f);
 	ab->cur_sz += sz;
-	ab->written_sz += sz;
+	ab->wr_sz += sz;
 
 	if (ab->max_sz && ab->cur_sz > ab->max_sz) {
 #if AUBUF_DEBUG
@@ -454,6 +454,7 @@ void aubuf_flush(struct aubuf *ab)
 	list_flush(&ab->afl);
 	ab->fill_sz = ab->wish_sz;
 	ab->cur_sz  = 0;
+	ab->wr_sz   = 0;
 	ab->ts      = 0;
 
 	mtx_unlock(ab->lock);
