@@ -66,14 +66,6 @@ static void aubuf_destructor(void *arg)
 }
 
 
-static size_t auframe_bytes_to_timestamp(const struct auframe *af, size_t n)
-{
-	size_t sample_size = aufmt_sample_size(af->fmt);
-
-	return n * AUDIO_TIMEBASE / (af->srate * af->ch * sample_size);
-}
-
-
 static void read_auframe(struct aubuf *ab, struct auframe *af)
 {
 	struct le *le = ab->afl.head;

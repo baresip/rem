@@ -4,8 +4,6 @@
  * Copyright (C) 2022 Commend.com - c.spielberger@commend.com
  */
 
-#define AUDIO_TIMEBASE 1000000U
-
 enum ajb_state {
 	AJB_GOOD = 0,
 	AJB_LOW,
