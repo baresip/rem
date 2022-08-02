@@ -23,7 +23,8 @@ struct aubuf {
 	size_t cur_sz;
 	size_t max_sz;
 	size_t fill_sz;         /**< To fill size                            */
-	size_t pkt_sz;        /**< Packet size                             */
+	size_t pkt_sz;          /**< Packet size                             */
+	size_t wr_sz;           /**< Written size                            */
 	bool started;
 	uint64_t ts;
 
@@ -91,8 +92,9 @@ static void read_auframe(struct aubuf *ab, struct auframe *af)
 			mem_deref(f);
 		}
 		else if (af->srate && af->ch && sample_size) {
-			f->af.timestamp += n * AUDIO_TIMEBASE /
-				(af->srate * af->ch * sample_size);
+
+			f->af.timestamp +=
+				auframe_bytes_to_timestamp(&f->af, n);
 		}
 
 		if (n == sz)
@@ -118,14 +120,14 @@ int aubuf_alloc(struct aubuf **abp, size_t min_sz, size_t max_sz)
 	struct aubuf *ab;
 	int err;
 
-	if (!abp || !min_sz)
+	if (!abp)
 		return EINVAL;
 
 	ab = mem_zalloc(sizeof(*ab), aubuf_destructor);
 	if (!ab)
 		return ENOMEM;
 
-	err = mtx_alloc(&ab->lock);
+	err = mutex_alloc(&ab->lock);
 	if (err)
 		goto out;
 
@@ -178,7 +180,7 @@ void aubuf_set_silence(struct aubuf *ab, double silence)
  */
 int aubuf_resize(struct aubuf *ab, size_t min_sz, size_t max_sz)
 {
-	if (!ab || !min_sz)
+	if (!ab)
 		return EINVAL;
 
 	mtx_lock(ab->lock);
@@ -215,7 +217,6 @@ int aubuf_append_auframe(struct aubuf *ab, struct mbuf *mb,
 			 const struct auframe *af)
 {
 	struct frame *f;
-	size_t max_sz;
 	size_t sz;
 
 	if (!ab || !mb)
@@ -236,17 +237,20 @@ int aubuf_append_auframe(struct aubuf *ab, struct mbuf *mb,
 	if (ab->fill_sz >= ab->pkt_sz)
 		ab->fill_sz -= ab->pkt_sz;
 
+	if (!f->af.timestamp && f->af.srate && f->af.ch) {
+		f->af.timestamp =
+			auframe_bytes_to_timestamp(&f->af, ab->wr_sz);
+	}
+
 	list_insert_sorted(&ab->afl, frame_less_equal, NULL, &f->le, f);
 	ab->cur_sz += sz;
+	ab->wr_sz += sz;
 
-	max_sz = ab->started ? ab->max_sz : ab->wish_sz;
-	if (ab->max_sz && ab->cur_sz > max_sz) {
+	if (ab->max_sz && ab->cur_sz > ab->max_sz) {
 #if AUBUF_DEBUG
-		if (ab->started) {
-			++ab->stats.or;
-			(void)re_printf("aubuf: %p overrun (cur=%zu/%zu)\n",
-					ab, ab->cur_sz, ab->max_sz);
-		}
+		++ab->stats.or;
+		(void)re_printf("aubuf: %p overrun (cur=%zu/%zu)\n",
+				ab, ab->cur_sz, ab->max_sz);
 #endif
 		f = list_ledata(ab->afl.head);
 		if (f) {
@@ -324,7 +328,7 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 
 	sz = auframe_size(af);
 	if (!ab->ajb && ab->mode == AUBUF_ADAPTIVE)
-		ab->ajb = ajb_alloc(ab->silence);
+		ab->ajb = ajb_alloc(ab->silence, ab->wish_sz);
 
 	mtx_lock(ab->lock);
 	as = ajb_get(ab->ajb, af);
@@ -358,6 +362,16 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 			ab->fill_sz = ab->wish_sz;
 	}
 
+	/* on first read drop old frames */
+	while (!ab->started && ab->wish_sz && ab->cur_sz > ab->wish_sz) {
+		struct frame *f = list_ledata(ab->afl.head);
+		if (f) {
+			ab->cur_sz -= mbuf_get_left(f->mb);
+			mem_deref(f);
+		}
+	}
+
+	ab->started = true;
 	read_auframe(ab, af);
 	if (as == AJB_HIGH) {
 #if AUBUF_DEBUG
@@ -376,7 +390,6 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 			ab->fill_sz = 0;
 	}
 
-	ab->started = true;
 	mtx_unlock(ab->lock);
 }
 
@@ -441,6 +454,7 @@ void aubuf_flush(struct aubuf *ab)
 	list_flush(&ab->afl);
 	ab->fill_sz = ab->wish_sz;
 	ab->cur_sz  = 0;
+	ab->wr_sz   = 0;
 	ab->ts      = 0;
 
 	mtx_unlock(ab->lock);
