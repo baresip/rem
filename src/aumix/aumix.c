@@ -223,14 +223,14 @@ int aumix_alloc(struct aumix **mixp, uint32_t srate,
 	mix->srate      = srate;
 	mix->ch         = ch;
 
-	err = mtx_init(&mix->mutex, mtx_plain);
-	if (err != thrd_success) {
+	err = mtx_init(&mix->mutex, mtx_plain) != thrd_success;
+	if (err) {
 		err = ENOMEM;
 		goto out;
 	}
 
-	err = cnd_init(&mix->cond);
-	if (err != thrd_success) {
+	err = cnd_init(&mix->cond) != thrd_success;
+	if (err) {
 		err = ENOMEM;
 		goto out;
 	}
