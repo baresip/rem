@@ -11,15 +11,19 @@
 
 cmake_minimum_required(VERSION 3.7)
 
-project(rem VERSION 2.6.0 LANGUAGES C)
+project(rem VERSION 2.7.0 LANGUAGES C)
 
 set(PROJECT_SOVERSION 3) # bump if ABI breaks
+
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 ##############################################################################
 #
 # Module Includes
 #
 include(CheckIncludeFile)
+
+find_package(RE REQUIRED)
 
 ##############################################################################
 #
@@ -28,38 +32,34 @@ include(CheckIncludeFile)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_EXTENSIONS OFF)
 
-if(NOT MSVC)
+if(MSVC)
+  add_compile_options("/W3")
+else()
   add_compile_options(
-    -Waggregate-return
+    -pedantic
     -Wall
     -Wbad-function-cast
     -Wcast-align
-    -Wdeclaration-after-statement
     -Wextra
     -Wmissing-declarations
     -Wmissing-prototypes
     -Wnested-externs
+    -Wno-strict-aliasing
     -Wold-style-definition
-    -Wshadow
+    -Wshadow -Waggregate-return
     -Wstrict-prototypes
+    -Wuninitialized
     -Wvla
   )
 endif()
 
-check_include_file(unistd.h HAVE_UNISTD_H)
-if(HAVE_UNISTD_H)
-  add_definitions(-DHAVE_UNISTD_H)
+if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wshorten-64-to-32 -Watomic-implicit-seq-cst)
 endif()
 
-include_directories(
-  include
-  ../re/include
-  /usr/local/include
-  /usr/local/include/re
-)
-link_directories(/usr/local/lib)
-add_definitions(-DVERSION="${PROJECT_VERSION}")
+find_package(re CONFIG REQUIRED HINTS ../re/cmake)
 
 set(SRCS
   src/aac/aac.c
@@ -123,7 +123,10 @@ add_library(${PROJECT_NAME}
 # Main target object
 #
 
-target_link_libraries(${PROJECT_NAME} re -lpthread -lm)
+target_link_libraries(${PROJECT_NAME} ${RE_LIBRARIES} -lpthread -lm)
+target_compile_definitions(${PROJECT_NAME} PRIVATE ${RE_DEFINITIONS})
+target_include_directories(${PROJECT_NAME} PRIVATE
+    include ${RE_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_SOVERSION})
 

@@ -334,8 +334,8 @@ int vidmix_alloc(struct vidmix **mixp)
 	if (!mix)
 		return ENOMEM;
 
-	err = mtx_init(&mix->rwlock, mtx_plain);
-	if (err != thrd_success) {
+	err = mtx_init(&mix->rwlock, mtx_plain) != thrd_success;
+	if (err) {
 		err = ENOMEM;
 		goto out;
 	}
@@ -385,8 +385,8 @@ int vidmix_source_alloc(struct vidmix_source **srcp, struct vidmix *mix,
 	src->fh      = fh;
 	src->arg     = arg;
 
-	err = mtx_init(&src->mutex, mtx_plain);
-	if (err != thrd_success) {
+	err = mtx_init(&src->mutex, mtx_plain) != thrd_success;
+	if (err) {
 		err = ENOMEM;
 		goto out;
 	}
