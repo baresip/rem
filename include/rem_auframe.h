@@ -44,4 +44,4 @@ static inline void auframe_update(struct auframe *af, void *sampv,
 size_t auframe_size(const struct auframe *af);
 void   auframe_mute(struct auframe *af);
 double auframe_level(struct auframe *af);
-size_t auframe_bytes_to_timestamp(const struct auframe *af, size_t n);
+uint64_t auframe_bytes_to_timestamp(const struct auframe *af, size_t n);
