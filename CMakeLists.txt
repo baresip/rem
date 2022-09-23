@@ -21,6 +21,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 #
 # Module Includes
 #
+include(GNUInstallDirs)
 include(CheckIncludeFile)
 
 find_package(RE REQUIRED)
@@ -113,22 +114,46 @@ set(HEADERS
   include/rem_vidmix.h
 )
 
-add_library(${PROJECT_NAME}
-  ${SRCS}
-  ${HEADERS}
-)
 
 ##############################################################################
 #
 # Main target object
 #
 
-target_link_libraries(${PROJECT_NAME} ${RE_LIBRARIES} -lpthread -lm)
+add_library(${PROJECT_NAME} ${SRCS} ${HEADERS})
+target_link_libraries(${PROJECT_NAME} ${RE_LIBRARIES} Threads::Threads -lm)
 target_compile_definitions(${PROJECT_NAME} PRIVATE ${RE_DEFINITIONS})
-target_include_directories(${PROJECT_NAME} PRIVATE
-    include ${RE_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR})
+target_include_directories(${PROJECT_NAME}
+  PUBLIC include 
+  PRIVATE ${RE_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR}
+)
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_SOVERSION})
 
 set_target_properties(rem PROPERTIES PUBLIC_HEADER "${HEADERS}")
-install(TARGETS rem LIBRARY)
+
+
+##############################################################################
+#
+# Install section
+#
+
+install(TARGETS rem
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    COMPONENT Libraries
+    NAMELINK_SKIP
+  ARCHIVE
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    COMPONENT Development
+  PUBLIC_HEADER
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rem
+    COMPONENT Development
+)
+
+install(TARGETS rem
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    NAMELINK_ONLY
+    COMPONENT Development
+)
