@@ -132,16 +132,18 @@ set(LINKLIBS ${RE_LIBRARIES} Threads::Threads -lm)
 # Main target object
 #
 
-add_library(rem-objs ${SRCS} ${HEADERS})
+add_library(rem-objs OBJECT ${SRCS} ${HEADERS})
+
+set_target_properties(rem-objs PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+target_compile_definitions(rem-objs PRIVATE ${RE_DEFINITIONS})
 
 target_link_libraries(rem-objs ${LINKLIBS})
-target_compile_definitions(rem-objs PRIVATE ${RE_DEFINITIONS})
 target_include_directories(rem-objs
   PUBLIC include 
   PRIVATE ${RE_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR}
 )
 
-set_target_properties(rem-objs PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 ##############################################################################
 #
