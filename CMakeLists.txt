@@ -11,7 +11,12 @@
 
 cmake_minimum_required(VERSION 3.10)
 
-project(rem VERSION 2.7.0 LANGUAGES C)
+project(rem
+  VERSION 2.7.0
+  LANGUAGES C
+  HOMEPAGE_URL https://github.com/baresip/rem
+  DESCRIPTION "Audio and video processing media library"
+)
 
 set(PROJECT_SOVERSION 3) # bump if ABI breaks
 
@@ -114,23 +119,57 @@ set(HEADERS
   include/rem_vidmix.h
 )
 
+##############################################################################
+#
+# Linking LIBS
+#
+
+set(LINKLIBS ${RE_LIBRARIES} Threads::Threads -lm)
+
 
 ##############################################################################
 #
 # Main target object
 #
 
-add_library(${PROJECT_NAME} ${SRCS} ${HEADERS})
-target_link_libraries(${PROJECT_NAME} ${RE_LIBRARIES} Threads::Threads -lm)
-target_compile_definitions(${PROJECT_NAME} PRIVATE ${RE_DEFINITIONS})
-target_include_directories(${PROJECT_NAME}
+add_library(rem-objs OBJECT ${SRCS} ${HEADERS})
+
+set_target_properties(rem-objs PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+target_compile_definitions(rem-objs PRIVATE ${RE_DEFINITIONS})
+
+target_link_libraries(rem-objs ${LINKLIBS})
+target_include_directories(rem-objs
   PUBLIC include 
   PRIVATE ${RE_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR}
 )
-set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_SOVERSION})
 
+
+##############################################################################
+#
+# Shared target librem.[so|dll|dylib]
+#
+
+add_library(rem-shared SHARED $<TARGET_OBJECTS:rem-objs>)
+target_link_libraries(rem-shared PRIVATE ${LINKLIBS})
+set_target_properties(rem-shared PROPERTIES VERSION ${PROJECT_VERSION})
+set_target_properties(rem-shared PROPERTIES SOVERSION ${PROJECT_SOVERSION})
+set_target_properties(rem-shared PROPERTIES OUTPUT_NAME "rem")
+
+
+##############################################################################
+#
+# Static target librem.a
+#
+
+add_library(rem STATIC $<TARGET_OBJECTS:rem-objs>)
+target_link_libraries(rem PUBLIC ${LINKLIBS})
+target_include_directories(rem PUBLIC include)
 set_target_properties(rem PROPERTIES PUBLIC_HEADER "${HEADERS}")
+
+if(MSVC)
+set_target_properties(rem PROPERTIES OUTPUT_NAME "rem-static")
+endif()
 
 
 ##############################################################################
@@ -138,7 +177,7 @@ set_target_properties(rem PROPERTIES PUBLIC_HEADER "${HEADERS}")
 # Install section
 #
 
-install(TARGETS rem
+install(TARGETS rem-shared rem
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
     COMPONENT Libraries
@@ -151,7 +190,7 @@ install(TARGETS rem
     COMPONENT Development
 )
 
-install(TARGETS rem
+install(TARGETS rem-shared
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
     NAMELINK_ONLY
