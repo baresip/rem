@@ -188,7 +188,7 @@ install(TARGETS rem-shared rem
     COMPONENT Development
 )
 
-install(TARGETS rem
+install(TARGETS rem-shared
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
     NAMELINK_ONLY
