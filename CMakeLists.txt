@@ -125,8 +125,7 @@ add_library(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME} ${RE_LIBRARIES} -lpthread -lm)
 target_compile_definitions(${PROJECT_NAME} PRIVATE ${RE_DEFINITIONS})
-target_include_directories(${PROJECT_NAME} PRIVATE
-    include ${RE_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC include)
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_SOVERSION})
 
