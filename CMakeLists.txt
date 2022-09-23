@@ -21,6 +21,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 #
 # Module Includes
 #
+include(GNUInstallDirs)
 include(CheckIncludeFile)
 
 find_package(RE REQUIRED)
@@ -123,11 +124,36 @@ add_library(${PROJECT_NAME}
 # Main target object
 #
 
-target_link_libraries(${PROJECT_NAME} ${RE_LIBRARIES} -lpthread -lm)
+target_link_libraries(${PROJECT_NAME} re Threads::Threads -lm)
 target_compile_definitions(${PROJECT_NAME} PRIVATE ${RE_DEFINITIONS})
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_SOVERSION})
 
 set_target_properties(rem PROPERTIES PUBLIC_HEADER "${HEADERS}")
-install(TARGETS rem LIBRARY)
+
+
+##############################################################################
+#
+# Install section
+#
+
+install(TARGETS rem
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    COMPONENT Libraries
+    NAMELINK_SKIP
+  ARCHIVE
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    COMPONENT Development
+  PUBLIC_HEADER
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/re
+    COMPONENT Development
+)
+
+install(TARGETS rem
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    NAMELINK_ONLY
+    COMPONENT Development
+)
