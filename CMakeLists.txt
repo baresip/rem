@@ -114,19 +114,19 @@ set(HEADERS
   include/rem_vidmix.h
 )
 
-add_library(${PROJECT_NAME}
-  ${SRCS}
-  ${HEADERS}
-)
 
 ##############################################################################
 #
 # Main target object
 #
 
-target_link_libraries(${PROJECT_NAME} re Threads::Threads -lm)
+add_library(${PROJECT_NAME} ${SRCS} ${HEADERS})
+target_link_libraries(${PROJECT_NAME} ${RE_LIBRARIES} Threads::Threads -lm)
 target_compile_definitions(${PROJECT_NAME} PRIVATE ${RE_DEFINITIONS})
-target_include_directories(${PROJECT_NAME} PUBLIC include)
+target_include_directories(${PROJECT_NAME}
+  PUBLIC include 
+  PRIVATE ${RE_INCLUDE_DIRS}
+)
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_SOVERSION})
 
