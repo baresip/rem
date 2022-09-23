@@ -124,7 +124,13 @@ set(HEADERS
 # Linking LIBS
 #
 
-set(LINKLIBS ${RE_LIBRARIES} Threads::Threads -lm)
+set(LINKLIBS ${RE_LIBRARIES} Threads::Threads)
+
+if(WIN32)
+  list(APPEND LINKLIBS qwave iphlpapi wsock32 ws2_32)
+else()
+  list(APPEND LINKLIBS -lm)
+endif()
 
 
 ##############################################################################
