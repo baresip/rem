@@ -24,15 +24,15 @@ size_t vidframe_size(enum vidfmt fmt, const struct vidsz *sz)
 
 	switch (fmt) {
 
-	case VID_FMT_YUV420P: return sz->w * sz->h * 3 / 2;
-	case VID_FMT_YUYV422: return sz->w * sz->h * 2;
-	case VID_FMT_UYVY422: return sz->w * sz->h * 2;
-	case VID_FMT_RGB32:   return sz->w * sz->h * 4;
-	case VID_FMT_ARGB:    return sz->w * sz->h * 4;
-	case VID_FMT_RGB565:  return sz->w * sz->h * 2;
-	case VID_FMT_NV12:    return sz->w * sz->h * 3 / 2;
-	case VID_FMT_NV21:    return sz->w * sz->h * 3 / 2;
-	case VID_FMT_YUV444P: return sz->w * sz->h * 3;
+	case VID_FMT_YUV420P: return (size_t)sz->w * sz->h * 3 / 2;
+	case VID_FMT_YUYV422: return (size_t)sz->w * sz->h * 2;
+	case VID_FMT_UYVY422: return (size_t)sz->w * sz->h * 2;
+	case VID_FMT_RGB32:   return (size_t)sz->w * sz->h * 4;
+	case VID_FMT_ARGB:    return (size_t)sz->w * sz->h * 4;
+	case VID_FMT_RGB565:  return (size_t)sz->w * sz->h * 2;
+	case VID_FMT_NV12:    return (size_t)sz->w * sz->h * 3 / 2;
+	case VID_FMT_NV21:    return (size_t)sz->w * sz->h * 3 / 2;
+	case VID_FMT_YUV444P: return (size_t)sz->w * sz->h * 3;
 	default:
 		return 0;
 	}
@@ -186,7 +186,8 @@ int vidframe_alloc(struct vidframe **vfp, enum vidfmt fmt,
 void vidframe_fill(struct vidframe *vf, uint32_t r, uint32_t g, uint32_t b)
 {
 	uint8_t *p;
-	unsigned h, i, x;
+	size_t h;
+	unsigned i, x;
 	int u, v;
 
 	if (!vf)
