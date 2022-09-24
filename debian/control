@@ -10,8 +10,9 @@ Package: librem
 Architecture: any
 Section: libs
 Depends: libre (>= 2.7.0), ${shlibs:Depends}, ${misc:Depends}
-Description: Audio and video processing media library (development files)
- Development package for librem
+Description: Audio and video processing media library
+ Audio mixer, resampler, tone generator, G.711 codec
+ Video mixer, pixel converter
 
 Package: librem-dev
 Architecture: any
