@@ -158,7 +158,8 @@ target_include_directories(rem-objs
 
 add_library(rem-shared SHARED $<TARGET_OBJECTS:rem-objs>)
 target_link_libraries(rem-shared PRIVATE ${LINKLIBS})
-set_target_properties(rem-shared PROPERTIES VERSION ${PROJECT_VERSION})
+set_target_properties(rem-shared PROPERTIES VERSION
+  ${PROJECT_SOVERSION}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 set_target_properties(rem-shared PROPERTIES SOVERSION ${PROJECT_SOVERSION})
 set_target_properties(rem-shared PROPERTIES OUTPUT_NAME "rem")
 
