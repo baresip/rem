@@ -180,6 +180,18 @@ endif()
 
 ##############################################################################
 #
+# Packaging section
+#
+
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  add_subdirectory(packaging)
+endif()
+
+configure_file(packaging/librem.pc.in librem.pc @ONLY)
+
+
+##############################################################################
+#
 # Install section
 #
 
@@ -201,4 +213,9 @@ install(TARGETS rem-shared
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
     NAMELINK_ONLY
     COMPONENT Development
+)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/librem.pc
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+  COMPONENT Development
 )
