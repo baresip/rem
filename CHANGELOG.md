@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [v2.8.0] - 2022-10-01
+
+* cmake: bump min. version 3.10 by @sreimers in https://github.com/baresip/rem/pull/79
+* auframe: auframe\_bytes\_to\_timestamp use uint64\_t by @cspiel1 in https://github.com/baresip/rem/pull/80
+* ci: migrate from make to CMake by @alfredh in https://github.com/baresip/rem/pull/81
+* cmake: install improvements by @sreimers in https://github.com/baresip/rem/pull/83
+* cmake: add static and shared targets by @sreimers in https://github.com/baresip/rem/pull/84
+* cmake: add win32 linklibs by @sreimers in https://github.com/baresip/rem/pull/85
+* debian: use dh-cmake by @sreimers in https://github.com/baresip/rem/pull/86
+* vid/frame: fix possbile overflow multiplication by @sreimers in https://github.com/baresip/rem/pull/87
+* cmake: add pkgconfig (fixes #90) by @robert-scheck in https://github.com/baresip/rem/pull/91
+* cmake: fix shared API soversion (aligned with make) by @robert-scheck in https://github.com/baresip/rem/pull/89
+
+**Full Changelog**: https://github.com/baresip/rem/compare/v2.7.0...v2.8.0
+
+---
+
 ## [v2.7.0] - 2022-09-01
 
 * cmake: add FindRE and use re-config.cmake for definitions by @sreimers in https://github.com/baresip/rem/pull/76
