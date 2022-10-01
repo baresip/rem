@@ -6,12 +6,12 @@
 
 # Main version number
 VER_MAJOR := 2
-VER_MINOR := 8
+VER_MINOR := 9
 VER_PATCH := 0
 
 # Development version, comment out on a release
 # Increment for breaking changes (dev2, dev3...)
-#VER_PRE   := dev
+VER_PRE   := dev
 
 # Libtool similar ABI versioning
 # https://github.com/baresip/re/wiki/ABI-Versioning
