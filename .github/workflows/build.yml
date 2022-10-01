@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         compiler: [gcc, clang]
-        os: [ubuntu-18.04, ubuntu-20.04, macos-latest]
+        os: [ubuntu-20.04, macos-latest]
         exclude:
            - os: macos-latest
              compiler: gcc
@@ -42,5 +42,5 @@ jobs:
       run: |
         cd ..
         make -C re libre.a
-        make -C rem EXTRA_CFLAGS=-Werror CCACHE= librem.a
-        cd retest && make STATIC=1 LIBRE_SO=../re && ./retest -r
+        cmake -S rem -B rem/build && cmake --build rem/build
+        cd retest && cmake . && make && ./retest -r

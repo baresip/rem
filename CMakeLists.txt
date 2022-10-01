@@ -9,9 +9,14 @@
 # Versioning
 #
 
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.10)
 
-project(rem VERSION 2.7.0 LANGUAGES C)
+project(rem
+  VERSION 2.8.0
+  LANGUAGES C
+  HOMEPAGE_URL https://github.com/baresip/rem
+  DESCRIPTION "Audio and video processing media library"
+)
 
 set(PROJECT_SOVERSION 3) # bump if ABI breaks
 
@@ -21,6 +26,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 #
 # Module Includes
 #
+include(GNUInstallDirs)
 include(CheckIncludeFile)
 
 find_package(RE REQUIRED)
@@ -113,22 +119,104 @@ set(HEADERS
   include/rem_vidmix.h
 )
 
-add_library(${PROJECT_NAME}
-  ${SRCS}
-  ${HEADERS}
-)
+##############################################################################
+#
+# Linking LIBS
+#
+
+set(LINKLIBS ${RE_LIBRARIES} Threads::Threads)
+
+if(WIN32)
+  list(APPEND LINKLIBS qwave iphlpapi wsock32 ws2_32)
+else()
+  list(APPEND LINKLIBS -lm)
+endif()
+
 
 ##############################################################################
 #
 # Main target object
 #
 
-target_link_libraries(${PROJECT_NAME} ${RE_LIBRARIES} -lpthread -lm)
-target_compile_definitions(${PROJECT_NAME} PRIVATE ${RE_DEFINITIONS})
-target_include_directories(${PROJECT_NAME} PRIVATE
-    include ${RE_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR})
-set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_SOVERSION})
+add_library(rem-objs OBJECT ${SRCS} ${HEADERS})
 
+set_target_properties(rem-objs PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+target_compile_definitions(rem-objs PRIVATE ${RE_DEFINITIONS})
+
+target_link_libraries(rem-objs ${LINKLIBS})
+target_include_directories(rem-objs
+  PUBLIC include 
+  PRIVATE ${RE_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR}
+)
+
+
+##############################################################################
+#
+# Shared target librem.[so|dll|dylib]
+#
+
+add_library(rem-shared SHARED $<TARGET_OBJECTS:rem-objs>)
+target_link_libraries(rem-shared PRIVATE ${LINKLIBS})
+set_target_properties(rem-shared PROPERTIES VERSION
+  ${PROJECT_SOVERSION}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
+set_target_properties(rem-shared PROPERTIES SOVERSION ${PROJECT_SOVERSION})
+set_target_properties(rem-shared PROPERTIES OUTPUT_NAME "rem")
+
+
+##############################################################################
+#
+# Static target librem.a
+#
+
+add_library(rem STATIC $<TARGET_OBJECTS:rem-objs>)
+target_link_libraries(rem PUBLIC ${LINKLIBS})
+target_include_directories(rem PUBLIC include)
 set_target_properties(rem PROPERTIES PUBLIC_HEADER "${HEADERS}")
-install(TARGETS rem LIBRARY)
+
+if(MSVC)
+set_target_properties(rem PROPERTIES OUTPUT_NAME "rem-static")
+endif()
+
+
+##############################################################################
+#
+# Packaging section
+#
+
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  add_subdirectory(packaging)
+endif()
+
+configure_file(packaging/librem.pc.in librem.pc @ONLY)
+
+
+##############################################################################
+#
+# Install section
+#
+
+install(TARGETS rem-shared rem
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    COMPONENT Libraries
+    NAMELINK_SKIP
+  ARCHIVE
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    COMPONENT Development
+  PUBLIC_HEADER
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rem
+    COMPONENT Development
+)
+
+install(TARGETS rem-shared
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    NAMELINK_ONLY
+    COMPONENT Development
+)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/librem.pc
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+  COMPONENT Development
+)
