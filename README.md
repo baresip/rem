@@ -31,11 +31,40 @@ librem is using GNU makefiles, and [libre](https://github.com/baresip/re)
 must be installed before building.
 
 
-### Build with default options
+### Build with debug enabled
 
 ```
-$ make
-$ sudo make install
+$ cmake -B build
+$ cmake --build build -j
+$ sudo cmake --install build
+$ sudo ldconfig
+```
+
+On some distributions, /usr/local/lib may not be included in ld.so.conf. 
+You can check with `grep "/usr/local/lib" /etc/ld.so.conf.d/*.conf` 
+and add if necessary:
+
+```
+$ echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/libc.conf
+$ sudo ldconfig
+```
+
+
+### Build with release
+
+```
+$ cmake -B build -DCMAKE_BUILD_TYPE=Release 
+$ cmake --build build -j
+$ sudo cmake --install build
+$ sudo ldconfig
+```
+
+### Build with clang compiler
+
+```
+$ cmake -B build -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+$ cmake --build build -j
+$ sudo cmake --install build
 $ sudo ldconfig
 ```
 
