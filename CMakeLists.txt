@@ -12,7 +12,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(rem
-  VERSION 2.8.0
+  VERSION 2.9.0
   LANGUAGES C
   HOMEPAGE_URL https://github.com/baresip/rem
   DESCRIPTION "Audio and video processing media library"
