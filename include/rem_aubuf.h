@@ -25,6 +25,21 @@ int  aubuf_debug(struct re_printf *pf, const struct aubuf *ab);
 size_t aubuf_cur_size(const struct aubuf *ab);
 void aubuf_drop_auframe(struct aubuf *ab, const struct auframe *af);
 
+
+static inline int aubuf_append(struct aubuf *ab, struct mbuf *mb)
+{
+	return aubuf_append_auframe(ab, mb, NULL);
+}
+
+
+static inline int aubuf_get_samp(struct aubuf *ab, uint32_t ptime,
+				 int16_t *sampv, size_t sampc)
+{
+	return aubuf_get(ab, ptime, (uint8_t *)sampv, sampc * 2);
+}
+
+
+#ifndef __cplusplus
 static inline int aubuf_write(struct aubuf *ab, const uint8_t *p, size_t sz)
 {
 	struct auframe af = {
@@ -37,12 +52,6 @@ static inline int aubuf_write(struct aubuf *ab, const uint8_t *p, size_t sz)
 	};
 
 	return aubuf_write_auframe(ab, &af);
-}
-
-
-static inline int aubuf_append(struct aubuf *ab, struct mbuf *mb)
-{
-	return aubuf_append_auframe(ab, mb, NULL);
 }
 
 
@@ -91,10 +100,4 @@ static inline void aubuf_read_samp(struct aubuf *ab, int16_t *sampv,
 
 	aubuf_read_auframe(ab, &af);
 }
-
-
-static inline int aubuf_get_samp(struct aubuf *ab, uint32_t ptime,
-				 int16_t *sampv, size_t sampc)
-{
-	return aubuf_get(ab, ptime, (uint8_t *)sampv, sampc * 2);
-}
+#endif
