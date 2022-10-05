@@ -96,6 +96,9 @@ double auframe_level(struct auframe *af)
 	if (!af)
 		return AULEVEL_UNDEF;
 
+	if (af->fmt == AUFMT_RAW)
+		return AULEVEL_UNDEF;
+
 	if (af->level == AULEVEL_UNDEF)
 		af->level = aulevel_calc_dbov(af->fmt, af->sampv, af->sampc);
 
