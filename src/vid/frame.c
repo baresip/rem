@@ -426,11 +426,11 @@ void vidframe_copy(struct vidframe *dst, const struct vidframe *src)
 			dd0 += lsd;
 			ds0 += lss;
 
-			memcpy(dd1, ds1, w);
+			memcpy(dd1, ds1, w/2);
 			dd1 += lsd1;
 			ds1 += lss1;
 
-			memcpy(dd2, ds2, w);
+			memcpy(dd2, ds2, w/2);
 			dd2 += lsd2;
 			ds2 += lss2;
 		}
