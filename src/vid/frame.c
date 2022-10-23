@@ -87,7 +87,6 @@ void vidframe_init_buf(struct vidframe *vf, enum vidfmt fmt,
 	h = (sz->h + 1) >> 1;
 
 	unsigned w2 = (sz->w + 1) >> 1;
-	unsigned h2 = (sz->h + 1) >> 1;
 
 	memset(vf->linesize, 0, sizeof(vf->linesize));
 	memset(vf->data, 0, sizeof(vf->data));
