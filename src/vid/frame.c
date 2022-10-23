@@ -436,6 +436,29 @@ void vidframe_copy(struct vidframe *dst, const struct vidframe *src)
 		}
 		break;
 
+	case VID_FMT_YUYV422:
+		lsd = dst->linesize[0];
+		lss = src->linesize[0];
+
+		dd0 = dst->data[0];
+
+		ds0 = src->data[0];
+
+		w  = dst->size.w & ~1;
+		h  = dst->size.h & ~1;
+
+		for (y=0; y<h; y+=2) {
+
+			memcpy(dd0, ds0, w*2);
+			dd0 += lsd;
+			ds0 += lss;
+
+			memcpy(dd0, ds0, w*2);
+			dd0 += lsd;
+			ds0 += lss;
+		}
+		break;
+
 	default:
 		(void)re_printf("vidframe_copy(): unsupported format:"
 				" %s\n", vidfmt_name(dst->fmt));

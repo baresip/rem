@@ -94,6 +94,18 @@ void vidframe_draw_point(struct vidframe *f, unsigned x, unsigned y,
 		vp[0] = rgb2v(r, g, b);
 		break;
 
+	case VID_FMT_YUYV422:
+
+		uv_offset = (f->linesize[0] * y + x * 2) & ~3;
+
+		yp = f->data[0] + uv_offset;
+
+		yp[0] = rgb2y(r, g, b);
+		yp[1] = rgb2u(r, g, b);
+		yp[2] = rgb2y(r, g, b);
+		yp[3] = rgb2v(r, g, b);
+		break;
+
 	default:
 		(void)re_fprintf(stderr, "vidframe_draw_point:"
 				 " unsupported format %s\n",
@@ -119,6 +131,8 @@ void vidframe_draw_hline(struct vidframe *f,
 			 uint8_t r, uint8_t g, uint8_t b)
 {
 	uint8_t y, u, v;
+	uint8_t *p;
+	size_t offset;
 
 	if (!f)
 		return;
@@ -150,6 +164,19 @@ void vidframe_draw_hline(struct vidframe *f,
 		memset(f->data[0] + y0*f->linesize[0] + x0, y, w);
 		memset(f->data[1] + y0*f->linesize[1] + x0, u, w);
 		memset(f->data[2] + y0*f->linesize[2] + x0, v, w);
+		break;
+
+	case VID_FMT_YUYV422:
+		offset = (y0*f->linesize[0] + x0) & ~3;
+		p = f->data[0] + offset;
+
+		for (unsigned x=0; x<w; x++) {
+
+			p[x*4  ] = y;
+			p[x*4+1] = u;
+			p[x*4+2] = y;
+			p[x*4+3] = v;
+		}
 		break;
 
 	default:
