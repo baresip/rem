@@ -179,6 +179,19 @@ void vidframe_draw_hline(struct vidframe *f,
 		}
 		break;
 
+	case VID_FMT_NV12:
+		offset = (f->linesize[1] * (y0/2) + x0) & ~1;
+		p = f->data[1] + offset;
+
+		memset(f->data[0] +  y0   *f->linesize[0] + x0,   y, w);
+
+		for (unsigned x=0; x<w; x+=2) {
+
+			p[x  ] = u;
+			p[x+1] = v;
+		}
+		break;
+
 	default:
 		(void)re_fprintf(stderr, "vidframe_draw_hline:"
 				 " unsupported format %s\n",
