@@ -26,7 +26,7 @@ else
 VERSION   := $(VER_MAJOR).$(VER_MINOR).$(VER_PATCH)-$(VER_PRE)
 endif
 OPT_SPEED := 1
-LIBRE_MIN := 2.8.0
+LIBRE_MIN := 2.9.0
 
 ifndef LIBRE_MK
 LIBRE_MK  := $(shell [ -f ../re/mk/re.mk ] && \
