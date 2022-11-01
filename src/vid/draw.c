@@ -120,6 +120,8 @@ void vidframe_draw_hline(struct vidframe *f,
 			 uint8_t r, uint8_t g, uint8_t b)
 {
 	uint8_t y, u, v;
+	uint8_t *p;
+	size_t offset;
 
 	if (!f)
 		return;
@@ -145,6 +147,32 @@ void vidframe_draw_hline(struct vidframe *f,
 		memset(f->data[0] + y0*f->linesize[0] + x0, y, w);
 		memset(f->data[1] + y0*f->linesize[1] + x0, u, w);
 		memset(f->data[2] + y0*f->linesize[2] + x0, v, w);
+		break;
+
+	case VID_FMT_YUYV422:
+		offset = (y0*f->linesize[0] + x0) & ~3;
+		p = f->data[0] + offset;
+
+		for (unsigned x=0; x<w; x++) {
+
+			p[x*4  ] = y;
+			p[x*4+1] = u;
+			p[x*4+2] = y;
+			p[x*4+3] = v;
+		}
+		break;
+
+	case VID_FMT_NV12:
+		offset = (f->linesize[1] * (y0/2) + x0) & ~1;
+		p = f->data[1] + offset;
+
+		memset(f->data[0] +  y0   *f->linesize[0] + x0,   y, w);
+
+		for (unsigned x=0; x<w; x+=2) {
+
+			p[x  ] = u;
+			p[x+1] = v;
+		}
 		break;
 
 	default:
