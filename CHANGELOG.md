@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [v2.9.0] - 2022-11-01
+
+## What's Changed
+* cmake: add pre-release version handling by @sreimers in https://github.com/baresip/rem/pull/95
+* README.md: Update build instructions for cmake by @robert-scheck in https://github.com/baresip/rem/pull/96
+* aubuf: exclude non compatible CXX functions by @sreimers in https://github.com/baresip/rem/pull/97
+* auframe: skip level calculation if format is RAW by @alfredh in https://github.com/baresip/rem/pull/99
+* ci: use actions/checkout@v3 by @sreimers in https://github.com/baresip/rem/pull/101
+* vidframe_draw_point: add NV12 and NV21 pixel format by @alfredh in https://github.com/baresip/rem/pull/102
+
+
+**Full Changelog**: https://github.com/baresip/rem/compare/v2.8.0...v2.9.0
+
+
 ## [v2.8.0] - 2022-10-01
 
 * cmake: bump min. version 3.10 by @sreimers in https://github.com/baresip/rem/pull/79
