@@ -44,6 +44,17 @@ void vidframe_draw_point(struct vidframe *f, unsigned x, unsigned y,
 		vp[0] = rgb2v(r, g, b);
 		break;
 
+	case VID_FMT_YUYV422:
+		uv_offset = (f->linesize[0] * y + x * 2) & ~3;
+
+		yp = f->data[0] + uv_offset;
+
+		yp[0] = rgb2y(r, g, b);
+		yp[1] = rgb2u(r, g, b);
+		yp[2] = rgb2y(r, g, b);
+		yp[3] = rgb2v(r, g, b);
+		break;
+
 	case VID_FMT_YUV444P:
 		yp = f->data[0] + f->linesize[0] * y + x;
 		up = f->data[1] + f->linesize[1] * y + x;
