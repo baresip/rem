@@ -16,6 +16,7 @@ enum vidfmt {
 	VID_FMT_NV12,         /* planar YUV  4:2:0   12bpp UV interleaved  */
 	VID_FMT_NV21,         /* planar YUV  4:2:0   12bpp VU interleaved  */
 	VID_FMT_YUV444P,      /* planar YUV  4:4:4   24bpp                 */
+	VID_FMT_YUV422P,      /* planar YUV  4:2:2   16bpp                 */
 	/* marker */
 	VID_FMT_N
 };

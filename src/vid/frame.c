@@ -33,6 +33,7 @@ size_t vidframe_size(enum vidfmt fmt, const struct vidsz *sz)
 	case VID_FMT_NV12:    return (size_t)sz->w * sz->h * 3 / 2;
 	case VID_FMT_NV21:    return (size_t)sz->w * sz->h * 3 / 2;
 	case VID_FMT_YUV444P: return (size_t)sz->w * sz->h * 3;
+	case VID_FMT_YUV422P: return (size_t)sz->w * sz->h * 2;
 	default:
 		return 0;
 	}
@@ -85,6 +86,8 @@ void vidframe_init_buf(struct vidframe *vf, enum vidfmt fmt,
 	w = (sz->w + 1) >> 1;
 	h = (sz->h + 1) >> 1;
 
+	unsigned w2 = (sz->w + 1) >> 1;
+
 	memset(vf->linesize, 0, sizeof(vf->linesize));
 	memset(vf->data, 0, sizeof(vf->data));
 
@@ -130,6 +133,16 @@ void vidframe_init_buf(struct vidframe *vf, enum vidfmt fmt,
 		vf->linesize[0] = sz->w;
 		vf->linesize[1] = sz->w;
 		vf->linesize[2] = sz->w;
+
+		vf->data[0] = buf;
+		vf->data[1] = vf->data[0] + vf->linesize[0] * sz->h;
+		vf->data[2] = vf->data[1] + vf->linesize[1] * sz->h;
+		break;
+
+	case VID_FMT_YUV422P:
+		vf->linesize[0] = sz->w;
+		vf->linesize[1] = w2;
+		vf->linesize[2] = w2;
 
 		vf->data[0] = buf;
 		vf->data[1] = vf->data[0] + vf->linesize[0] * sz->h;
@@ -249,6 +262,14 @@ void vidframe_fill(struct vidframe *vf, uint32_t r, uint32_t g, uint32_t b)
 		}
 		break;
 
+	case VID_FMT_YUV422P:
+		h = vf->size.h;
+
+		memset(vf->data[0], rgb2y(r, g, b), h * vf->linesize[0]);
+		memset(vf->data[1], rgb2u(r, g, b), h * vf->linesize[1]);
+		memset(vf->data[2], rgb2v(r, g, b), h * vf->linesize[2]);
+		break;
+
 	default:
 		(void)re_printf("vidfill: no fmt %s\n", vidfmt_name(vf->fmt));
 		break;
@@ -266,6 +287,8 @@ void vidframe_copy(struct vidframe *dst, const struct vidframe *src)
 {
 	const uint8_t *ds0, *ds1, *ds2;
 	unsigned lsd, lss, w, h, y;
+	unsigned lsd1, lss1;
+	unsigned lsd2, lss2;
 	uint8_t *dd0, *dd1, *dd2;
 
 	if (!dst || !src)
@@ -378,8 +401,67 @@ void vidframe_copy(struct vidframe *dst, const struct vidframe *src)
 		}
 		break;
 
+	case VID_FMT_YUV422P:
+		lsd  = dst->linesize[0];
+		lss  = src->linesize[0];
+		lsd1 = dst->linesize[1];
+		lss1 = src->linesize[1];
+		lsd2 = dst->linesize[2];
+		lss2 = src->linesize[2];
+
+		dd0 = dst->data[0];
+		dd1 = dst->data[1];
+		dd2 = dst->data[2];
+
+		ds0 = src->data[0];
+		ds1 = src->data[1];
+		ds2 = src->data[2];
+
+		w  = dst->size.w & ~1;
+		h  = dst->size.h & ~1;
+
+		for (y=0; y<h; y+=1) {
+
+			memcpy(dd0, ds0, w);
+			dd0 += lsd;
+			ds0 += lss;
+
+			memcpy(dd1, ds1, w/2);
+			dd1 += lsd1;
+			ds1 += lss1;
+
+			memcpy(dd2, ds2, w/2);
+			dd2 += lsd2;
+			ds2 += lss2;
+		}
+		break;
+
+	case VID_FMT_YUYV422:
+		lsd = dst->linesize[0];
+		lss = src->linesize[0];
+
+		dd0 = dst->data[0];
+
+		ds0 = src->data[0];
+
+		w  = dst->size.w & ~1;
+		h  = dst->size.h & ~1;
+
+		for (y=0; y<h; y+=2) {
+
+			memcpy(dd0, ds0, w*2);
+			dd0 += lsd;
+			ds0 += lss;
+
+			memcpy(dd0, ds0, w*2);
+			dd0 += lsd;
+			ds0 += lss;
+		}
+		break;
+
 	default:
-		(void)re_printf("vidframe_copy(): unsupported format\n");
+		(void)re_printf("vidframe_copy(): unsupported format:"
+				" %s\n", vidfmt_name(dst->fmt));
 		break;
 	}
 }
