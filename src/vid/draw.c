@@ -159,12 +159,6 @@ void vidframe_draw_hline(struct vidframe *f,
 		memset(f->data[2] + y0*f->linesize[2] + x0, v, w);
 		break;
 
-	case VID_FMT_YUV422P:
-		memset(f->data[0] + y0*f->linesize[0] + x0, y, w);
-		memset(f->data[1] + y0*f->linesize[1] + x0, u, w);
-		memset(f->data[2] + y0*f->linesize[2] + x0, v, w);
-		break;
-
 	case VID_FMT_YUYV422:
 		offset = (y0*f->linesize[0] + x0) & ~3;
 		p = f->data[0] + offset;
@@ -189,6 +183,12 @@ void vidframe_draw_hline(struct vidframe *f,
 			p[x  ] = u;
 			p[x+1] = v;
 		}
+		break;
+
+	case VID_FMT_YUV422P:
+		memset(f->data[0] + y0*f->linesize[0] + x0, y, w);
+		memset(f->data[1] + y0*f->linesize[1] + x0, u, w);
+		memset(f->data[2] + y0*f->linesize[2] + x0, v, w);
 		break;
 
 	default:
