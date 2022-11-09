@@ -254,7 +254,7 @@ int aubuf_append_auframe(struct aubuf *ab, struct mbuf *mb,
 #endif
 		f = list_ledata(ab->afl.head);
 		if (f) {
-			ab->cur_sz -= sz;
+			ab->cur_sz -= mbuf_get_left(f->mb);
 			mem_deref(f);
 		}
 	}
