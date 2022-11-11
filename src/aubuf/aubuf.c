@@ -323,6 +323,7 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 	size_t sz;
 	bool filling;
 	enum ajb_state as;
+	bool drop;
 
 	if (!ab || !af)
 		return;
@@ -364,7 +365,8 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 	}
 
 	/* on first read drop old frames */
-	while (!ab->started && ab->wish_sz && ab->cur_sz > ab->wish_sz) {
+	drop = ab->mode != AUBUF_FILE && !ab->started && ab->wish_sz;
+	while (drop && ab->cur_sz > ab->wish_sz) {
 		struct frame *f = list_ledata(ab->afl.head);
 		if (f) {
 			ab->cur_sz -= mbuf_get_left(f->mb);

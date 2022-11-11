@@ -7,7 +7,8 @@ struct aubuf;
 
 enum aubuf_mode {
 	AUBUF_FIXED,
-	AUBUF_ADAPTIVE
+	AUBUF_ADAPTIVE,
+	AUBUF_FILE
 };
 
 int  aubuf_alloc(struct aubuf **abp, size_t min_sz, size_t max_sz);
