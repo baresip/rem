@@ -6,9 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [v2.10.0] - 2022-12-06
+
+### What's Changed
+* draw: add pixel format YUYV422 by @alfredh in https://github.com/baresip/rem/pull/106
+* vidframe_draw_hline: add more formats by @alfredh in https://github.com/baresip/rem/pull/107
+* vid: add support for YUV422P pixel format by @alfredh in https://github.com/baresip/rem/pull/103
+* aubuf: avoid underflow of cur_sz by @cspiel1 in https://github.com/baresip/rem/pull/108
+* cmake/pkgconfig: fix prefix variable by @cspiel1 in https://github.com/baresip/rem/pull/109
+
+**Full Changelog**: https://github.com/baresip/rem/compare/v2.9.0...v2.10.0
+
+---
+
 ## [v2.9.0] - 2022-11-01
 
-## What's Changed
+### What's Changed
 * cmake: add pre-release version handling by @sreimers in https://github.com/baresip/rem/pull/95
 * README.md: Update build instructions for cmake by @robert-scheck in https://github.com/baresip/rem/pull/96
 * aubuf: exclude non compatible CXX functions by @sreimers in https://github.com/baresip/rem/pull/97
@@ -19,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Full Changelog**: https://github.com/baresip/rem/compare/v2.8.0...v2.9.0
 
+---
 
 ## [v2.8.0] - 2022-10-01
 
