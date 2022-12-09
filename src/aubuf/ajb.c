@@ -26,6 +26,7 @@ enum {
 	BUFTIME_EMA_COEFF  = 128,  /* Divisor for Buftime EMA coeff.     */
 	BUFTIME_LO         = 125,  /* 125% of jitter                     */
 	BUFTIME_HI         = 175,  /* 175% of jitter                     */
+	SKEW_MAX           = 10,   /* Max skew in [ms]                   */
 };
 
 
@@ -249,8 +250,8 @@ void ajb_calc(struct ajb *ajb, const struct auframe *af, size_t cur_sz)
 
 	bufmax = MAX(bufmax, bufmin + 7 * ptime / 6);
 
-	/* reset time base if a frame is missing */
-	if (ts - ajb->ts > ptime)
+	/* reset time base if a frame is missing or skew is too high */
+	if (ts - ajb->ts > ptime || da > SKEW_MAX * 1000)
 		ajb->ts0 = 0;
 
 	if ((uint32_t) ajb->avbuftime < bufmin)
