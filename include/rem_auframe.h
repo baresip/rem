@@ -15,7 +15,8 @@ struct auframe {
 	uint64_t timestamp;  /**< Timestamp in AUDIO_TIMEBASE units */
 	double level;        /**< Audio level in dBov               */
 	uint8_t ch;          /**< Channels                          */
-	uint8_t padding[7];
+	uint16_t id;         /**< Frame/Channel identifier          */
+	uint8_t padding[5];
 };
 
 void auframe_init(struct auframe *af, enum aufmt fmt, void *sampv,

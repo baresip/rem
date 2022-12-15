@@ -40,6 +40,7 @@ void auframe_init(struct auframe *af, enum aufmt fmt, void *sampv,
 	af->srate = srate;
 	af->level = AULEVEL_UNDEF;
 	af->ch = ch;
+	af->id = 0;
 }
 
 
