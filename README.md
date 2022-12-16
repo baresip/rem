@@ -27,7 +27,7 @@ librem is a Audio and video processing media library
 
 ## Building
 
-librem is using GNU makefiles, and [libre](https://github.com/baresip/re)
+librem is using CMake, and [libre](https://github.com/baresip/re)
 must be installed before building.
 
 
