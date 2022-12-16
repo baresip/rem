@@ -436,3 +436,34 @@ void aumix_source_flush(struct aumix_source *src)
 
 	aubuf_flush(src->aubuf);
 }
+
+
+/**
+ * Audio mixer debug handler
+ *
+ * @param pf  Print function
+ * @param mix Audio mixer
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int aumix_debug(struct re_printf *pf, struct aumix *mix)
+{
+	struct le *le;
+	int err = 0;
+
+	if (!pf || !mix)
+		return EINVAL;
+
+	re_hprintf(pf, "aumix debug:\n");
+	mtx_lock(&mix->mutex);
+	LIST_FOREACH(&mix->srcl, le)
+	{
+		struct aumix_source *src = le->data;
+		re_hprintf(pf, "\tsource: %p muted=%d ", src, src->muted);
+		err = aubuf_debug(pf, src->aubuf);
+		re_hprintf(pf, "\n");
+	}
+	mtx_unlock(&mix->mutex);
+
+	return err;
+}
