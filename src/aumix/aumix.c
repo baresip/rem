@@ -155,27 +155,37 @@ static int aumix_thread(void *arg)
 					mix->frame_size);
 		}
 
-		for (le=mix->srcl.head; le; le=le->next) {
+		for (le = mix->srcl.head; le; le = le->next) {
 
 			struct aumix_source *src = le->data;
 			struct le *cle;
 
-			memcpy(mix_frame, base_frame, mix->frame_size*2);
+			memcpy(mix_frame, base_frame, mix->frame_size * 2);
 
-			for (cle=mix->srcl.head; cle; cle=cle->next) {
+			LIST_FOREACH(&mix->srcl, cle)
+			{
 
 				struct aumix_source *csrc = cle->data;
-				size_t i;
-#if 1
+				int32_t sample;
+
 				/* skip self */
 				if (csrc == src)
 					continue;
-#endif
+
 				if (csrc->muted)
 					continue;
 
-				for (i=0; i<mix->frame_size; i++)
-					mix_frame[i] += csrc->frame[i];
+				for (size_t i = 0; i < mix->frame_size; i++) {
+					sample = mix_frame[i] + csrc->frame[i];
+
+					/* soft clipping */
+					if (sample >= 32767)
+						sample = 32767;
+					if (sample <= -32767)
+						sample = -32767;
+
+					mix_frame[i] = (int16_t)sample;
+				}
 			}
 
 			src->fh(mix_frame, mix->frame_size, src->arg);
