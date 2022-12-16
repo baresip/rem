@@ -461,9 +461,12 @@ int aumix_debug(struct re_printf *pf, struct aumix *mix)
 		struct aumix_source *src = le->data;
 		re_hprintf(pf, "\tsource: %p muted=%d ", src, src->muted);
 		err = aubuf_debug(pf, src->aubuf);
+		if (err)
+			goto out;
 		re_hprintf(pf, "\n");
 	}
-	mtx_unlock(&mix->mutex);
 
+out:
+	mtx_unlock(&mix->mutex);
 	return err;
 }
