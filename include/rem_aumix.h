@@ -27,3 +27,4 @@ void aumix_source_mute(struct aumix_source *src, bool mute);
 int  aumix_source_put(struct aumix_source *src, const int16_t *sampv,
 		      size_t sampc);
 void aumix_source_flush(struct aumix_source *src);
+int aumix_debug(struct re_printf *pf, struct aumix *mix);
