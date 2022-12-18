@@ -30,16 +30,19 @@ struct aumix {
 	uint32_t frame_size;
 	uint32_t srate;
 	uint8_t ch;
+	aumix_record_h *recordh;
 	bool run;
 };
 
 /** Defines an Audio mixer source */
 struct aumix_source {
 	struct le le;
+	struct auframe af;
 	int16_t *frame;
 	struct aubuf *aubuf;
 	struct aumix *mix;
 	aumix_frame_h *fh;
+	aumix_read_h *readh;
 	void *arg;
 	bool muted;
 };
@@ -147,12 +150,20 @@ static int aumix_thread(void *arg)
 			base_frame = silence;
 		}
 
-		for (le=mix->srcl.head; le; le=le->next) {
+		for (le = mix->srcl.head; le; le = le->next) {
 
 			struct aumix_source *src = le->data;
 
-			aubuf_read_samp(src->aubuf, src->frame,
-					mix->frame_size);
+			if (src->muted)
+				continue;
+
+			if (src->readh)
+				src->readh(&src->af, src->arg);
+			else
+				aubuf_read_auframe(src->aubuf, &src->af);
+
+			if (mix->recordh)
+				mix->recordh(&src->af);
 		}
 
 		for (le = mix->srcl.head; le; le = le->next) {
@@ -232,6 +243,7 @@ int aumix_alloc(struct aumix **mixp, uint32_t srate,
 	mix->frame_size = srate * ch * ptime / 1000;
 	mix->srate      = srate;
 	mix->ch         = ch;
+	mix->recordh    = NULL;
 
 	err = mtx_init(&mix->mutex, mtx_plain) != thrd_success;
 	if (err) {
@@ -260,6 +272,23 @@ int aumix_alloc(struct aumix **mixp, uint32_t srate,
 		*mixp = mix;
 
 	return err;
+}
+
+
+/**
+ * Add record handler
+ *
+ * @param mix      Audio mixer
+ * @param recordh  Record Handler
+ */
+void aumix_recordh(struct aumix *mix, aumix_record_h *recordh)
+{
+	if (!mix)
+		return;
+
+	mtx_lock(&mix->mutex);
+	mix->recordh = recordh;
+	mtx_unlock(&mix->mutex);
 }
 
 
@@ -352,6 +381,9 @@ int aumix_source_alloc(struct aumix_source **srcp, struct aumix *mix,
 		goto out;
 	}
 
+	auframe_init(&src->af, AUFMT_S16LE, src->frame, mix->frame_size,
+		     mix->srate, mix->ch);
+
 	err = aubuf_alloc(&src->aubuf, sz * 6, sz * 12);
 	if (err)
 		goto out;
@@ -364,6 +396,24 @@ int aumix_source_alloc(struct aumix_source **srcp, struct aumix *mix,
 
 	return err;
 }
+
+
+/**
+ * Add source read handler (alternative to aumix_source_put)
+ *
+ * @param src    Audio mixer source
+ * @param readh  Read Handler
+ */
+void aumix_source_readh(struct aumix_source *src, aumix_read_h *readh)
+{
+	if (!src || !src->mix)
+		return;
+
+	mtx_lock(&src->mix->mutex);
+	src->readh = readh;
+	mtx_unlock(&src->mix->mutex);
+}
+
 
 /**
  * Mute/unmute aumix source
