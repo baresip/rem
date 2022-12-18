@@ -84,6 +84,7 @@ static void read_auframe(struct aubuf *ab, struct auframe *af)
 		(void)mbuf_read_mem(f->mb, p, n);
 		ab->cur_sz -= n;
 
+		af->id	      = f->af.id;
 		af->srate     = f->af.srate;
 		af->ch	      = f->af.ch;
 		af->timestamp = f->af.timestamp;
