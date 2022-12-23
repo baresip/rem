@@ -37,6 +37,7 @@ struct aubuf {
 	enum aubuf_mode mode;
 	struct ajb *ajb;         /**< Adaptive jitter buffer statistics      */
 	double silence;          /**< Silence volume in negative [dB]        */
+	bool live;               /**< Live stream switch                     */
 };
 
 
@@ -135,6 +136,7 @@ int aubuf_alloc(struct aubuf **abp, size_t min_sz, size_t max_sz)
 	ab->wish_sz = min_sz;
 	ab->max_sz  = max_sz;
 	ab->fill_sz = min_sz;
+	ab->live    = true;
 
  out:
 	if (err)
@@ -143,6 +145,23 @@ int aubuf_alloc(struct aubuf **abp, size_t min_sz, size_t max_sz)
 		*abp = ab;
 
 	return err;
+}
+
+
+/**
+ * Sets the live stream flag on/off. If activated the audio buffer drops old
+ * frames on first read to keep the latency under `min_sz` bytes on startup.
+ * Default: `live` is true.
+ *
+ * @param ab   Audio buffer
+ * @param live Live flag
+ */
+void aubuf_set_live(struct aubuf *ab, bool live)
+{
+	if (!ab)
+		return;
+
+	ab->live = live;
 }
 
 
@@ -323,6 +342,7 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 	size_t sz;
 	bool filling;
 	enum ajb_state as;
+	bool drop;
 
 	if (!ab || !af)
 		return;
@@ -364,7 +384,8 @@ void aubuf_read_auframe(struct aubuf *ab, struct auframe *af)
 	}
 
 	/* on first read drop old frames */
-	while (!ab->started && ab->wish_sz && ab->cur_sz > ab->wish_sz) {
+	drop = ab->live && !ab->started && ab->wish_sz;
+	while (drop && ab->cur_sz > ab->wish_sz) {
 		struct frame *f = list_ledata(ab->afl.head);
 		if (f) {
 			ab->cur_sz -= mbuf_get_left(f->mb);
