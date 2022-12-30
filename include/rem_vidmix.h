@@ -15,7 +15,7 @@ struct vidmix_source;
  * @param frame Video frame
  * @param arg   Handler argument
  */
-typedef void (vidmix_frame_h)(uint32_t ts, const struct vidframe *frame,
+typedef void (vidmix_frame_h)(uint64_t ts, const struct vidframe *frame,
 			      void *arg);
 
 int  vidmix_alloc(struct vidmix **mixp);
