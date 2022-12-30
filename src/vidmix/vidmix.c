@@ -16,6 +16,11 @@
 #include <rem_vidconv.h>
 #include <rem_vidmix.h>
 
+/*
+ * Clock-rate for video timestamp
+ */
+#define VIDEO_TIMEBASE 1000000U
+
 
 struct vidmix {
 	mtx_t rwlock;
@@ -186,7 +191,7 @@ static int vidmix_thread(void *arg)
 {
 	struct vidmix_source *src = arg;
 	struct vidmix *mix = src->mix;
-	uint64_t ts = tmr_jiffies();
+	uint64_t ts = tmr_jiffies_usec();
 
 	mtx_lock(&src->mutex);
 
@@ -200,7 +205,7 @@ static int vidmix_thread(void *arg)
 		sys_usleep(4000);
 		mtx_lock(&src->mutex);
 
-		now = tmr_jiffies();
+		now = tmr_jiffies_usec();
 
 		if (ts > now)
 			continue;
@@ -258,7 +263,7 @@ static int vidmix_thread(void *arg)
 
 		mtx_unlock(&mix->rwlock);
 
-		src->fh((uint32_t)ts * 90, src->frame_tx, src->arg);
+		src->fh(ts, src->frame_tx, src->arg);
 
 		ts += src->fint;
 	}
@@ -273,7 +278,7 @@ static int content_thread(void *arg)
 {
 	struct vidmix_source *src = arg;
 	struct vidmix *mix = src->mix;
-	uint64_t ts = tmr_jiffies();
+	uint64_t ts = tmr_jiffies_usec();
 
 	mtx_lock(&src->mutex);
 
@@ -286,7 +291,7 @@ static int content_thread(void *arg)
 		sys_usleep(4000);
 		mtx_lock(&src->mutex);
 
-		now = tmr_jiffies();
+		now = tmr_jiffies_usec();
 
 		if (ts > now)
 			continue;
@@ -300,7 +305,7 @@ static int content_thread(void *arg)
 			if (!lsrc->content || !lsrc->frame_rx || lsrc == src)
 				continue;
 
-			src->fh((uint32_t)ts * 90, lsrc->frame_rx, src->arg);
+			src->fh(ts, lsrc->frame_rx, src->arg);
 			break;
 		}
 
@@ -380,7 +385,7 @@ int vidmix_source_alloc(struct vidmix_source **srcp, struct vidmix *mix,
 		return ENOMEM;
 
 	src->mix     = mem_ref(mix);
-	src->fint    = 1000/fps;
+	src->fint    = VIDEO_TIMEBASE/fps;
 	src->content = content;
 	src->fh      = fh;
 	src->arg     = arg;
@@ -577,7 +582,7 @@ void vidmix_source_set_rate(struct vidmix_source *src, unsigned fps)
 		return;
 
 	mtx_lock(&src->mutex);
-	src->fint = 1000/fps;
+	src->fint = VIDEO_TIMEBASE/fps;
 	mtx_unlock(&src->mutex);
 }
 
