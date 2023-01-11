@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [v2.11.0] - 2023-01-11
+
+## What's Changed
+* auframe: add struct auframe id field by @sreimers in https://github.com/baresip/rem/pull/112
+* aumix: add aumix_debug function by @sreimers in https://github.com/baresip/rem/pull/113
+* Makefile remove by @alfredh in https://github.com/baresip/rem/pull/111
+* aumix: add soft clipping by @sreimers in https://github.com/baresip/rem/pull/114
+* ci: fix re cmake build by @sreimers in https://github.com/baresip/rem/pull/115
+* aumix: use auframe and add optional record handler by @sreimers in https://github.com/baresip/rem/pull/116
+* aubuf: add AUBUF_FILE mode by @cspiel1 in https://github.com/baresip/rem/pull/117
+* vidmix: fix VIDEO_TIMEBASE by @sreimers in https://github.com/baresip/rem/pull/118
+
+
+**Full Changelog**: https://github.com/baresip/rem/compare/v2.10.0...v2.11.0
+
+---
+
 ## [v2.10.0] - 2022-12-06
 
 ### What's Changed
