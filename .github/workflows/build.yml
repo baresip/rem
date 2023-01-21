@@ -44,6 +44,11 @@ jobs:
       run: |
         sudo apt-get update && sudo apt-get install -y ninja-build
 
+    - name: install packages
+      if: ${{ runner.os == 'macOS' }}
+      run: |
+        brew install ninja
+
     - name: make re/rem
       shell: bash
       run: |
