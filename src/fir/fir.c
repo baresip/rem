@@ -44,7 +44,7 @@ void fir_filter(struct fir *fir, int16_t *outv, const int16_t *inv, size_t inc,
 	if (!fir || !outv || !inv || !ch || !tapv || !tapc)
 		return;
 
-	if (hmask >= ARRAY_SIZE(fir->history) || hmask & (hmask+1))
+	if (hmask >= RE_ARRAY_SIZE(fir->history) || hmask & (hmask+1))
 		return;
 
 	while (inc--) {
