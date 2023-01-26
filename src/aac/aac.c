@@ -56,9 +56,9 @@ int aac_header_decode(struct aac_header *hdr, const uint8_t *p, size_t len)
 
 	channel_index = (p[1] >> 3) & 0xf;
 
-	if (srate_index >= ARRAY_SIZE(aac_sample_rates))
+	if (srate_index >= RE_ARRAY_SIZE(aac_sample_rates))
 		return ENOTSUP;
-	if (channel_index >= ARRAY_SIZE(aac_channels))
+	if (channel_index >= RE_ARRAY_SIZE(aac_channels))
 		return ENOTSUP;
 
 	hdr->sample_rate = aac_sample_rates[srate_index];

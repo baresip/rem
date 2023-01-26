@@ -228,16 +228,16 @@ int auresamp_setup(struct auresamp *rs, uint32_t irate, unsigned ich,
 		}
 		else if (orate == 48000 && irate == 16000) {
 			rs->tapv = fir_48_8;
-			rs->tapc = ARRAY_SIZE(fir_48_8);
+			rs->tapc = RE_ARRAY_SIZE(fir_48_8);
 		}
 		else if ((orate == 16000 && irate == 8000) ||
                          (orate == 32000 && irate == 16000)) {
 			rs->tapv = fir_16_4;
-			rs->tapc = ARRAY_SIZE(fir_16_4);
+			rs->tapc = RE_ARRAY_SIZE(fir_16_4);
 		}
 		else {
 			rs->tapv = fir_48_4;
-			rs->tapc = ARRAY_SIZE(fir_48_4);
+			rs->tapc = RE_ARRAY_SIZE(fir_48_4);
 		}
 	}
 	else {
@@ -263,16 +263,16 @@ int auresamp_setup(struct auresamp *rs, uint32_t irate, unsigned ich,
 
 		if (irate == 48000 && orate == 16000) {
 			rs->tapv = fir_48_8;
-			rs->tapc = ARRAY_SIZE(fir_48_8);
+			rs->tapc = RE_ARRAY_SIZE(fir_48_8);
 		}
 		else if ((irate == 16000 && orate == 8000) ||
                          (irate == 32000 && orate == 16000)) {
 			rs->tapv = fir_16_4;
-			rs->tapc = ARRAY_SIZE(fir_16_4);
+			rs->tapc = RE_ARRAY_SIZE(fir_16_4);
 		}
 		else {
 			rs->tapv = fir_48_4;
-			rs->tapc = ARRAY_SIZE(fir_48_4);
+			rs->tapc = RE_ARRAY_SIZE(fir_48_4);
 		}
 	}
 
