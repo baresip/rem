@@ -133,6 +133,7 @@ void plot_underrun(struct ajb *ajb)
  * Initializes the adaptive jitter buffer statistics
  *
  * @param silence Silence audio level
+ * @param wish_sz Wish size of buffer [Bytes]
  *
  * @return ajb    Adaptive jitter buffer statistics
  */
@@ -291,6 +292,14 @@ void ajb_set_ts0(struct ajb *ajb, uint64_t timestamp)
 }
 
 
+/**
+ * Get the state of the Adaptive Jitter Buffer
+ *
+ * @param ajb Adaptive Jitter Buffer state
+ * @param af  Audio frame
+ *
+ * @return Computed jitter buffer state
+ */
 enum ajb_state ajb_get(struct ajb *ajb, struct auframe *af)
 {
 	enum ajb_state as = AJB_GOOD;
