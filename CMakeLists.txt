@@ -12,13 +12,13 @@
 cmake_minimum_required(VERSION 3.13)
 
 project(rem
-  VERSION 2.11.0
+  VERSION 2.12.0
   LANGUAGES C
   HOMEPAGE_URL https://github.com/baresip/rem
   DESCRIPTION "Audio and video processing media library"
 )
 
-set(PROJECT_SOVERSION 5) # bump if ABI breaks
+set(PROJECT_SOVERSION 6) # bump if ABI breaks
 
 # Pre-release identifier, comment out on a release
 # Increment for breaking changes (dev2, dev3...)
