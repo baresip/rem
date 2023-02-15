@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [v2.12.0] - 2023-02-15
+
+## What's Changed
+* cmake: increment required version by @cspiel1 in https://github.com/baresip/rem/pull/122
+* aubuf/ajb: reset reference timestamp if skew is too high by @cspiel1 in https://github.com/baresip/rem/pull/119
+* ci: rename ccheck to lint by @alfredh in https://github.com/baresip/rem/pull/124
+* Use Ninja as CMake generator by @alfredh in https://github.com/baresip/rem/pull/123
+* use RE_ARRAY_SIZE by @alfredh in https://github.com/baresip/rem/pull/125
+* fix doxygen warnings by @alfredh in https://github.com/baresip/rem/pull/126
+* bump version numbers to 2.12.0 by @alfredh in https://github.com/baresip/rem/pull/127
+
+
+**Full Changelog**: https://github.com/baresip/rem/compare/v2.11.0...v2.12.0
+
+---
+
 ## [v2.11.0] - 2023-01-11
 
 ## What's Changed
